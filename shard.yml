@@ -1,0 +1,14 @@
+name: variants_ja
+version: 0.1.0
+
+authors:
+  - Hisashi Morita
+
+targets:
+  variants_ja:
+    main: src/variants_ja.cr
+
+development_dependencies:
+  mecab:
+    github: hisashim/crystal-mecab
+    branch: hisashim

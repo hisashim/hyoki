@@ -3,11 +3,12 @@ CRYSTAL_PATH = `$(CRYSTAL) env CRYSTAL_PATH`
 BUILD_OPTS = --error-trace
 SPEC_OPTS = --error-trace
 
-all: check docs
+all: check docs build
 
 check: formatcheck spec
 
 spec:
+	shards check || shards install
 	$(CRYSTAL) spec $(SPEC_OPTS) $@ | tee $@.log
 
 %_spec: spec/%_spec.cr
@@ -19,10 +20,13 @@ formatcheck:
 docs:
 	$(CRYSTAL) docs
 
+build:
+	shards build
+
 mostlyclean:
-	rm -fr *.log
+	rm -fr *.log bin/ docs/
 
 clean: mostlyclean
-	rm -fr docs/
+	rm -fr lib/
 
 .PHONY: all check spec formatcheck docs mostlyclean clean
