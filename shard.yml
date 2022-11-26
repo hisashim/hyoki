@@ -9,6 +9,6 @@ targets:
     main: src/variants_ja.cr
 
 development_dependencies:
-  mecab:
-    github: hisashim/crystal-mecab
+  fucoidan:
+    github: hisashim/crystal-fucoidan
     branch: hisashim
