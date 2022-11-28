@@ -155,11 +155,14 @@ module VariantsJa
     getter :lines
 
     def string_to_morphemes(string, line_index)
-      # remove BOS/EOS at nodes[0] and nodes[-1]
-      nodes = Fucoidan::Fucoidan.new.enum_parse(string).to_a.reject! { |n|
-        n.feature.starts_with? "BOS/EOS"
-      }
-      nodes.map_with_index { |n, i|
+      # Note: We avoid method chaining to Fucoidan constructor,
+      # e.g. `Fucoidan::Fucoidan.new.enum_parse(...)`, as we have
+      # encountered errors such as `Invalid memory access (signal 11)` or
+      # `free(): invalid pointer` at runtime somehow.
+      parser = Fucoidan::Fucoidan.new
+      morphemes = parser.enum_parse(string).to_a.reject! { |n|
+        n.feature.starts_with? "BOS/EOS" # remove BOS/EOS nodes
+      }.map_with_index { |n, i|
         Morpheme.new(n, line_index, i)
       }
     end
