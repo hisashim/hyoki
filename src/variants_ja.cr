@@ -51,11 +51,11 @@ module VariantsJa
     @prob : Float32
     @wcost : Int16
     @cost : Int64
-    @line : VariantsJa::Document::Line
+    @line_index : Int32
     @index : Int32
     @string_index : Int32 | Nil
 
-    def initialize(node, line, index)
+    def initialize(node, line_index, index)
       n = node
       @surface = n.surface
       @feature = Feature.new(n.feature)
@@ -73,14 +73,14 @@ module VariantsJa
       @prob = n.prob
       @wcost = n.wcost
       @cost = n.cost
-      @line = line
+      @line_index = line_index
       @index = index
       @string_index = nil
     end
 
     getter :surface, :feature, :length, :rlength, :node_id, :rc_attr,
       :lc_attr, :posid, :char_type, :stat, :isbest, :alpha, :beta, :prob,
-      :wcost, :cost, :line, :index
+      :wcost, :cost, :line_index, :index
 
     def string_indexes(string, substring, preceding_length = 0)
       head, sep, tail = string.partition(substring)
@@ -100,7 +100,7 @@ module VariantsJa
       end
     end
 
-    def string_index
+    def string_index(line)
       str_indexes = string_indexes(line.body, surface)
       str_length = line.body.size
       str_index_proportions = str_indexes.map { |str_idx| str_idx.to_f / str_length }
@@ -147,27 +147,27 @@ module VariantsJa
       @lines = string.lines.map_with_index { |source, i|
         body, eol = source.scan(RE_LINE).first
         line = Line.new(source, body, eol, i)
-        line.morphemes = string_to_morphemes(body, line)
+        line.morphemes = string_to_morphemes(body, i)
         line
       }
     end
 
     getter :lines
 
-    def string_to_morphemes(string, line)
+    def string_to_morphemes(string, line_index)
       # remove BOS/EOS at nodes[0] and nodes[-1]
       nodes = Fucoidan::Fucoidan.new.enum_parse(string).to_a.reject! { |n|
         n.feature.starts_with? "BOS/EOS"
       }
       nodes.map_with_index { |n, i|
-        Morpheme.new(n, line, i)
+        Morpheme.new(n, line_index, i)
       }
     end
 
     def yomi(string)
       body, eol = string.scan(RE_LINE).first
       line = Line.new(string, body, eol, 0)
-      string_to_morphemes(string, line).first.feature.yomi
+      string_to_morphemes(string, 0).first.feature.yomi
     end
 
     EXCERPT_FORMATTER = {
@@ -208,17 +208,18 @@ module VariantsJa
               }.join(" | ")
           section_lines =
             morphemes_of_same_yomi.map { |m|
-              line_number = m.line.index + 1
-              character_number = m.string_index + 1
+              line = @lines[m.line_index]
+              line_number = m.line_index + 1
+              character_number = m.string_index(line) + 1
               excerpt_context_before =
-                if (leftmost = m.string_index - context_before) && leftmost.negative?
-                  m.line.body[0, m.string_index]
+                if (leftmost = m.string_index(line) - context_before) && leftmost.negative?
+                  line.body[0, m.string_index(line)]
                 else
-                  m.line.body[leftmost, context_before]
+                  line.body[leftmost, context_before]
                 end
               excerpt_body = m.surface
               excerpt_context_after =
-                m.line.body[(m.string_index + m.surface.size), context_after]
+                line.body[(m.string_index(line) + m.surface.size), context_after]
               excerpt =
                 excerpt_formatter.call(excerpt_context_before,
                   excerpt_body,
@@ -251,17 +252,18 @@ module VariantsJa
       report_lines =
         variants.map { |lexical_form_yomi, morphemes_of_same_yomi|
           morphemes_of_same_yomi.map { |m|
-            line_number = m.line.index + 1
-            character_number = m.string_index + 1
+            line = @lines[m.line_index]
+            line_number = m.line_index + 1
+            character_number = m.string_index(line) + 1
             excerpt_context_before =
-              if (leftmost = m.string_index - context_before) && leftmost.negative?
-                m.line.body[0, m.string_index]
+              if (leftmost = m.string_index(line) - context_before) && leftmost.negative?
+                line.body[0, m.string_index(line)]
               else
-                m.line.body[leftmost, context_before]
+                line.body[leftmost, context_before]
               end
             excerpt_body = m.surface
             excerpt_context_after =
-              m.line.body[(m.string_index + m.surface.size), context_after]
+              line.body[(m.string_index(line) + m.surface.size), context_after]
             excerpt =
               excerpt_formatter.call(excerpt_context_before,
                 excerpt_body,

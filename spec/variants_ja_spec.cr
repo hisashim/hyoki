@@ -17,14 +17,14 @@ describe "VariantsJa" do
       end
     end
 
-    describe "#line" do
-      it "returns the line to which the morpheme belongs" do
+    describe "#line_index" do
+      it "returns the index of the line to which the morpheme belongs" do
         input = <<-EOS
           L1
           L2
           EOS
-        VariantsJa::Document.new(input).lines[0].morphemes[0].line.index.should eq 0
-        VariantsJa::Document.new(input).lines[1].morphemes[0].line.index.should eq 1
+        VariantsJa::Document.new(input).lines[0].morphemes[0].line_index.should eq 0
+        VariantsJa::Document.new(input).lines[1].morphemes[0].line_index.should eq 1
       end
     end
 
@@ -46,10 +46,11 @@ describe "VariantsJa" do
         input = <<-EOS
           する・しない・する・しない・する・しない
           EOS
-        morphemes = VariantsJa::Document.new(input).lines[0].morphemes
+        line = VariantsJa::Document.new(input).lines[0]
+        morphemes = line.morphemes
         m0 = morphemes[0]
         m0.surface.should eq "する"
-        m0.string_indexes(m0.line.body, m0.surface).should eq [0, 7, 14]
+        m0.string_indexes(line.body, m0.surface).should eq [0, 7, 14]
       end
     end
 
@@ -60,9 +61,9 @@ describe "VariantsJa" do
           そういうことが あるのだという。
           EOS
         lines = VariantsJa::Document.new(input).lines
-        lines[0].morphemes[0].string_index.should eq 0
-        lines[0].morphemes[5].string_index.should eq 7
-        lines[0].morphemes[10].string_index.should eq 14
+        lines[0].morphemes[0].string_index(lines[0]).should eq 0
+        lines[0].morphemes[5].string_index(lines[0]).should eq 7
+        lines[0].morphemes[10].string_index(lines[0]).should eq 14
       end
 
       it "handles empty input without problems" do
@@ -70,7 +71,7 @@ describe "VariantsJa" do
           EOS
         VariantsJa::Document.new(input).lines.each { |l|
           l.morphemes.each { |m|
-            substring_start = m.string_index
+            substring_start = m.string_index(l)
             substring_length = m.surface.size
             substring = l.body[substring_start, substring_length]
             substring.should eq m.surface
@@ -111,8 +112,7 @@ describe "VariantsJa" do
           わかりません。
           EOS
         body, eol = input.scan(VariantsJa::Document::RE_LINE).first
-        line = VariantsJa::Document::Line.new(input, body, eol, 0)
-        morphemes = VariantsJa::Document.new(input).string_to_morphemes(input, line)
+        morphemes = VariantsJa::Document.new(input).string_to_morphemes(input, 0)
         morphemes.map { |m| m.surface }.should eq ["わかり", "ませ", "ん", "。"]
       end
     end
