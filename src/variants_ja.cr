@@ -82,10 +82,6 @@ module VariantsJa
       :lc_attr, :posid, :char_type, :stat, :isbest, :alpha, :beta, :prob,
       :wcost, :cost, :line, :index
 
-    def index_within_the_same_surface
-      line.morphemes[0..index].select { |m| m.surface == surface }.size - 1
-    end
-
     def string_indexes(string, substring, preceding_length = 0)
       head, sep, tail = string.partition(substring)
       case

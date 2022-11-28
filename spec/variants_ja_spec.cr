@@ -41,21 +41,6 @@ describe "VariantsJa" do
       end
     end
 
-    describe "#index_within_the_same_surface" do
-      it "returns the index within morphemes with the same surface" do
-        input = <<-EOS
-          する・しない・する・しない・する・しない
-          EOS
-        morphemes = VariantsJa::Document.new(input).lines[0].morphemes
-        morphemes.map { |m| m.surface }
-          .should eq %w[する ・ し ない ・ する ・ し ない ・ する ・ し ない]
-        morphemes[0].index_within_the_same_surface.should eq 0
-        morphemes[5].index_within_the_same_surface.should eq 1
-        morphemes[2].index_within_the_same_surface.should eq 0
-        morphemes[7].index_within_the_same_surface.should eq 1
-      end
-    end
-
     describe "#string_indexes" do
       it "returns the indexes (start position) of all occurences of the substring" do
         input = <<-EOS
