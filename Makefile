@@ -1,6 +1,6 @@
 CRYSTAL = crystal
 CRYSTAL_PATH = `$(CRYSTAL) env CRYSTAL_PATH`
-BUILD_OPTS = --error-trace
+BUILD_OPTS = --error-trace --release
 SPEC_OPTS = --error-trace
 
 all: check docs build
@@ -21,7 +21,7 @@ docs:
 	$(CRYSTAL) docs
 
 build:
-	shards build
+	shards build $(BUILD_OPTS)
 
 mostlyclean:
 	rm -fr *.log bin/ docs/
