@@ -119,6 +119,18 @@ module VariantsJa
     end
   end
 
+  def self.string_to_morphemes(string, line_index, parser)
+    morphemes = parser.enum_parse(string).to_a.reject! { |n|
+      n.feature.starts_with? "BOS/EOS" # remove BOS/EOS nodes
+    }.map_with_index { |n, i|
+      Morpheme.new(n, line_index, i)
+    }
+  end
+
+  def self.yomi(string, parser)
+    string_to_morphemes(string, 0, parser).first.feature.yomi
+  end
+
   class Document
     RE_LINE = /^(.*?)((?:\r\n|\r|\n)*)$/
 
@@ -128,50 +140,35 @@ module VariantsJa
       @eol : String
       @index : Int32
       @morphemes : Array(Morpheme)
+      @parser : Fucoidan::Fucoidan
 
-      def initialize(source, body, eol, index, morphemes = [] of Morpheme)
+      def initialize(source, index, parser)
+        body, eol = source.scan(RE_LINE).first
+        morphemes = VariantsJa.string_to_morphemes(body, index, parser)
         @source = source
         @body = body
         @eol = eol
         @index = index
         @morphemes = morphemes
+        @parser = parser
       end
 
-      getter :body, :eol, :index
-      property :morphemes
+      getter :body, :eol, :index, :morphemes
     end
 
     @lines : Array(Line)
+    @parser : Fucoidan::Fucoidan
 
-    def initialize(string)
-      @lines = string.lines.map_with_index { |source, i|
-        body, eol = source.scan(RE_LINE).first
-        line = Line.new(source, body, eol, i)
-        line.morphemes = string_to_morphemes(body, i)
-        line
-      }
-    end
-
-    getter :lines
-
-    def string_to_morphemes(string, line_index)
+    def initialize(string, parser = Fucoidan::Fucoidan.new)
+      @lines = string.lines.map_with_index { |str, i| Line.new(str, i, parser) }
       # Note: We avoid method chaining to Fucoidan constructor,
       # e.g. `Fucoidan::Fucoidan.new.enum_parse(...)`, as we have
       # encountered errors such as `Invalid memory access (signal 11)` or
       # `free(): invalid pointer` at runtime somehow.
-      parser = Fucoidan::Fucoidan.new
-      morphemes = parser.enum_parse(string).to_a.reject! { |n|
-        n.feature.starts_with? "BOS/EOS" # remove BOS/EOS nodes
-      }.map_with_index { |n, i|
-        Morpheme.new(n, line_index, i)
-      }
+      @parser = parser
     end
 
-    def yomi(string)
-      body, eol = string.scan(RE_LINE).first
-      line = Line.new(string, body, eol, 0)
-      string_to_morphemes(string, 0).first.feature.yomi
-    end
+    getter :lines
 
     EXCERPT_FORMATTER = {
       :tty => ->(context_before : String, body : String, context_after : String) {
@@ -193,7 +190,7 @@ module VariantsJa
 
       morphemes_by_yomi =
         @lines.map { |l| l.morphemes }.flatten.group_by { |m|
-          yomi(m.feature.lexical_form)
+          VariantsJa.yomi(m.feature.lexical_form, @parser)
         }
 
       variants =
@@ -244,7 +241,7 @@ module VariantsJa
 
       morphemes_by_yomi =
         @lines.map { |m| m.morphemes }.flatten.group_by { |m|
-          yomi(m.feature.lexical_form)
+          VariantsJa.yomi(m.feature.lexical_form, @parser)
         }
 
       variants =

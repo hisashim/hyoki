@@ -111,8 +111,7 @@ describe "VariantsJa" do
         input = <<-EOS
           わかりません。
           EOS
-        body, eol = input.scan(VariantsJa::Document::RE_LINE).first
-        morphemes = VariantsJa::Document.new(input).string_to_morphemes(input, 0)
+        morphemes = VariantsJa.string_to_morphemes(input, 0, Fucoidan::Fucoidan.new)
         morphemes.map { |m| m.surface }.should eq ["わかり", "ませ", "ん", "。"]
       end
     end
@@ -122,7 +121,7 @@ describe "VariantsJa" do
         input = <<-EOS
           日本語
           EOS
-        VariantsJa::Document.new(input).yomi(input).should eq "ニホンゴ"
+        VariantsJa.yomi(input, Fucoidan::Fucoidan.new).should eq "ニホンゴ"
       end
     end
 
