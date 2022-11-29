@@ -106,6 +106,10 @@ module VariantsJa
   end
 
   def self.string_to_morphemes(string, line_index, parser)
+    # Note: Avoid method chaining to Fucoidan constructor,
+    # e.g. `Fucoidan::Fucoidan.new.enum_parse(...)`, as you may
+    # encounter errors such as `Invalid memory access (signal 11)` or
+    # `free(): invalid pointer` at runtime somehow.
     morphemes = parser.enum_parse(string).to_a.reject! { |n|
       n.feature.starts_with? "BOS/EOS" # remove BOS/EOS nodes
     }.map_with_index { |n, i|
@@ -150,10 +154,6 @@ module VariantsJa
                    parser = Fucoidan::Fucoidan.new,
                    yomi_parser = Fucoidan::Fucoidan.new("-Oyomi"))
       @lines = string.lines.map_with_index { |str, i| Line.new(str, i, parser) }
-      # Note: We avoid method chaining to Fucoidan constructor,
-      # e.g. `Fucoidan::Fucoidan.new.enum_parse(...)`, as we have
-      # encountered errors such as `Invalid memory access (signal 11)` or
-      # `free(): invalid pointer` at runtime somehow.
       @parser = parser
       @yomi_parser = yomi_parser
     end
