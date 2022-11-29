@@ -121,7 +121,7 @@ describe "VariantsJa" do
         input = <<-EOS
           日本語
           EOS
-        VariantsJa.yomi(input, Fucoidan::Fucoidan.new).should eq "ニホンゴ"
+        VariantsJa.yomi(input, Fucoidan::Fucoidan.new("-Oyomi")).should eq "ニホンゴ"
       end
     end
 

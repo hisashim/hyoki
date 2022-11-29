@@ -113,8 +113,8 @@ module VariantsJa
     }
   end
 
-  def self.yomi(string, parser)
-    string_to_morphemes(string, 0, parser).first.feature.yomi
+  def self.yomi(string, yomi_parser)
+    yomi_parser.parse(string).chomp
   end
 
   class Document
@@ -144,14 +144,18 @@ module VariantsJa
 
     @lines : Array(Line)
     @parser : Fucoidan::Fucoidan
+    @yomi_parser : Fucoidan::Fucoidan
 
-    def initialize(string, parser = Fucoidan::Fucoidan.new)
+    def initialize(string,
+                   parser = Fucoidan::Fucoidan.new,
+                   yomi_parser = Fucoidan::Fucoidan.new("-Oyomi"))
       @lines = string.lines.map_with_index { |str, i| Line.new(str, i, parser) }
       # Note: We avoid method chaining to Fucoidan constructor,
       # e.g. `Fucoidan::Fucoidan.new.enum_parse(...)`, as we have
       # encountered errors such as `Invalid memory access (signal 11)` or
       # `free(): invalid pointer` at runtime somehow.
       @parser = parser
+      @yomi_parser = yomi_parser
     end
 
     getter :lines
@@ -176,7 +180,7 @@ module VariantsJa
 
       morphemes_by_yomi =
         @lines.map { |l| l.morphemes }.flatten.group_by { |m|
-          VariantsJa.yomi(m.feature.lexical_form, @parser)
+          VariantsJa.yomi(m.feature.lexical_form, @yomi_parser)
         }
 
       variants =
@@ -227,7 +231,7 @@ module VariantsJa
 
       morphemes_by_yomi =
         @lines.map { |m| m.morphemes }.flatten.group_by { |m|
-          VariantsJa.yomi(m.feature.lexical_form, @parser)
+          VariantsJa.yomi(m.feature.lexical_form, @yomi_parser)
         }
 
       variants =
