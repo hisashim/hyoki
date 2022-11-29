@@ -82,22 +82,8 @@ module VariantsJa
       :lc_attr, :posid, :char_type, :stat, :isbest, :alpha, :beta, :prob,
       :wcost, :cost, :line_index, :index
 
-    def string_indexes(string, substring, preceding_length = 0)
-      head, sep, tail = string.partition(substring)
-      case
-      when sep.empty? # found none
-        [] of Int32
-      when tail.empty? # found the last one
-        [head.size + preceding_length]
-      else # found one
-        if tail.includes? substring
-          [head.size + preceding_length] +
-            string_indexes(tail, substring,
-              preceding_length: preceding_length + head.size + sep.size)
-        else
-          [head.size + preceding_length]
-        end
-      end
+    def string_indexes(string, substring)
+      string.scan(Regex.new(Regex.escape(substring))).map { |md| md.begin }
     end
 
     def string_index(line)
