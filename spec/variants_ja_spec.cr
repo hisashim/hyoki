@@ -61,9 +61,9 @@ describe "VariantsJa" do
           そういうことが あるのだという。
           EOS
         lines = VariantsJa::Document.new(input).lines
-        lines[0].morphemes[0].string_index(lines[0]).should eq 0
-        lines[0].morphemes[5].string_index(lines[0]).should eq 7
-        lines[0].morphemes[10].string_index(lines[0]).should eq 14
+        lines[0].morphemes[0].string_index.should eq 0
+        lines[0].morphemes[5].string_index.should eq 7
+        lines[0].morphemes[10].string_index.should eq 14
       end
 
       it "handles empty input without problems" do
@@ -71,7 +71,7 @@ describe "VariantsJa" do
           EOS
         VariantsJa::Document.new(input).lines.each { |l|
           l.morphemes.each { |m|
-            substring_start = m.string_index(l)
+            substring_start = m.string_index
             substring_length = m.surface.size
             substring = l.body[substring_start, substring_length]
             substring.should eq m.surface

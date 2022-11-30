@@ -51,11 +51,12 @@ module VariantsJa
     @prob : Float32
     @wcost : Int16
     @cost : Int64
-    @line_index : Int32
     @index : Int32
-    @string_index : Int32 | Nil
+    @source_string : String
+    @line_index : Int32
+    @string_index : Int32
 
-    def initialize(node, line_index, index)
+    def initialize(node, index, max_index, source_string, line_index)
       n = node
       @surface = n.surface
       @feature = Feature.new(n.feature)
@@ -73,35 +74,32 @@ module VariantsJa
       @prob = n.prob
       @wcost = n.wcost
       @cost = n.cost
-      @line_index = line_index
       @index = index
-      @string_index = nil
+      @source_string = source_string
+      @line_index = line_index
+      @string_index = string_index(source_string, n.surface, index, max_index)
     end
 
     getter :surface, :feature, :length, :rlength, :node_id, :rc_attr,
       :lc_attr, :posid, :char_type, :stat, :isbest, :alpha, :beta, :prob,
-      :wcost, :cost, :line_index, :index
+      :wcost, :cost, :index, :source_string, :line_index, :string_index
 
     def string_indexes(string, substring)
       string.scan(Regex.new(Regex.escape(substring))).map { |md| md.begin }
     end
 
-    def string_index(line)
-      str_indexes = string_indexes(line.body, surface)
-      str_length = line.body.size
-      str_index_proportions = str_indexes.map { |str_idx| str_idx.to_f / str_length }
-      str_indexes_to_proportions = str_indexes.zip(str_index_proportions).to_h
-
-      morpheme_index_proportion = index.to_f / line.morphemes.last.index
-
-      guessed_string_index_candidates =
-        str_indexes_to_proportions.to_a.sort_by { |_str_idx, str_idx_prop|
+    def string_index(source_string, substring, morpheme_index, max_morpheme_index)
+      str_idxs = string_indexes(source_string, substring)
+      str_len = source_string.size
+      str_idx_proportions = str_idxs.map { |str_idx| str_idx.to_f / str_len }
+      str_idxs_to_proportions = str_idxs.zip(str_idx_proportions).to_h
+      morpheme_idx_proportion = morpheme_index.to_f / max_morpheme_index
+      str_idx_candidates =
+        str_idxs_to_proportions.to_a.sort_by { |_str_idx, str_idx_prop|
           # add 0.01 to avoid dealing with zero
-          ((str_idx_prop + 0.01) / (morpheme_index_proportion + 0.01) - 1).abs
+          ((str_idx_prop + 0.01) / (morpheme_idx_proportion + 0.01) - 1).abs
         }
-      best_guess = guessed_string_index_candidates.first.first
-
-      @string_index ||= best_guess
+      str_idx_candidates.first.first # best guess
     end
   end
 
@@ -112,8 +110,15 @@ module VariantsJa
     # `free(): invalid pointer` at runtime somehow.
     morphemes = parser.enum_parse(string).to_a.reject! { |n|
       n.feature.starts_with? "BOS/EOS" # remove BOS/EOS nodes
-    }.map_with_index { |n, i|
-      Morpheme.new(n, line_index, i)
+    }
+    return [] of Morpheme if morphemes.empty?
+    max_index = morphemes.size - 1
+    morphemes.map_with_index { |n, i|
+      Morpheme.new(node: n,
+        index: i,
+        max_index: max_index,
+        source_string: string,
+        line_index: line_index)
     }
   end
 
@@ -200,16 +205,16 @@ module VariantsJa
             morphemes_of_same_yomi.map { |m|
               line = @lines[m.line_index]
               line_number = m.line_index + 1
-              character_number = m.string_index(line) + 1
+              character_number = m.string_index + 1
               excerpt_context_before =
-                if (leftmost = m.string_index(line) - context_before) && leftmost.negative?
-                  line.body[0, m.string_index(line)]
+                if (leftmost = m.string_index - context_before) && leftmost.negative?
+                  line.body[0, m.string_index]
                 else
                   line.body[leftmost, context_before]
                 end
               excerpt_body = m.surface
               excerpt_context_after =
-                line.body[(m.string_index(line) + m.surface.size), context_after]
+                line.body[(m.string_index + m.surface.size), context_after]
               excerpt =
                 excerpt_formatter.call(excerpt_context_before,
                   excerpt_body,
@@ -244,16 +249,16 @@ module VariantsJa
           morphemes_of_same_yomi.map { |m|
             line = @lines[m.line_index]
             line_number = m.line_index + 1
-            character_number = m.string_index(line) + 1
+            character_number = m.string_index + 1
             excerpt_context_before =
-              if (leftmost = m.string_index(line) - context_before) && leftmost.negative?
-                line.body[0, m.string_index(line)]
+              if (leftmost = m.string_index - context_before) && leftmost.negative?
+                line.body[0, m.string_index]
               else
                 line.body[leftmost, context_before]
               end
             excerpt_body = m.surface
             excerpt_context_after =
-              line.body[(m.string_index(line) + m.surface.size), context_after]
+              line.body[(m.string_index + m.surface.size), context_after]
             excerpt =
               excerpt_formatter.call(excerpt_context_before,
                 excerpt_body,
