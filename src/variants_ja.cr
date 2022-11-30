@@ -52,6 +52,7 @@ module VariantsJa
     @wcost : Int16
     @cost : Int64
     @index : Int32
+    @max_index : Int32
     @source_string : String
     @line_index : Int32
     @string_index : Int32
@@ -75,31 +76,36 @@ module VariantsJa
       @wcost = n.wcost
       @cost = n.cost
       @index = index
+      @max_index = max_index
       @source_string = source_string
       @line_index = line_index
-      @string_index = string_index(source_string, n.surface, index, max_index)
+      @string_index = -100 # FIXME: kludge to pass typechecking
     end
 
     getter :surface, :feature, :length, :rlength, :node_id, :rc_attr,
       :lc_attr, :posid, :char_type, :stat, :isbest, :alpha, :beta, :prob,
-      :wcost, :cost, :index, :source_string, :line_index, :string_index
+      :wcost, :cost, :index, :source_string, :line_index
 
     def string_indexes(string, substring)
       string.scan(Regex.new(Regex.escape(substring))).map { |md| md.begin }
     end
 
-    def string_index(source_string, substring, morpheme_index, max_morpheme_index)
-      str_idxs = string_indexes(source_string, substring)
-      str_len = source_string.size
-      str_idx_proportions = str_idxs.map { |str_idx| str_idx.to_f / str_len }
-      str_idxs_to_proportions = str_idxs.zip(str_idx_proportions).to_h
-      morpheme_idx_proportion = morpheme_index.to_f / max_morpheme_index
-      str_idx_candidates =
-        str_idxs_to_proportions.to_a.sort_by { |_str_idx, str_idx_prop|
-          # add 0.01 to avoid dealing with zero
-          ((str_idx_prop + 0.01) / (morpheme_idx_proportion + 0.01) - 1).abs
-        }
-      str_idx_candidates.first.first # best guess
+    def string_index
+      if @string_index >= 0 # FIXME: kludge to pass typechecking
+        @string_index
+      else
+        str_idxs = string_indexes(@source_string, @surface)
+        str_len = @source_string.size
+        str_idx_proportions = str_idxs.map { |str_idx| str_idx.to_f / str_len }
+        str_idxs_to_proportions = str_idxs.zip(str_idx_proportions).to_h
+        morpheme_idx_proportion = @index.to_f / @max_index
+        str_idx_candidates =
+          str_idxs_to_proportions.to_a.sort_by { |_str_idx, str_idx_prop|
+            # add 0.01 to avoid dealing with zero
+            ((str_idx_prop + 0.01) / (morpheme_idx_proportion + 0.01) - 1).abs
+          }
+        @string_index = str_idx_candidates.first.first # best guess
+      end
     end
   end
 
