@@ -197,10 +197,12 @@ module VariantsJa
       variants =
         morphemes_by_yomi.select { |_lexical_form_yomi, morphemes_of_same_yomi|
           morphemes_of_same_yomi.map { |m| m.feature.lexical_form }.sort.uniq.size >= 2
-        }.to_h
+        }
 
       report_sections =
-        variants.map { |lexical_form_yomi, morphemes_of_same_yomi|
+        variants.to_a.sort_by { |lexical_form_yomi, morphemes_of_same_yomi|
+          lexical_form_yomi # sort sections by yomi of lexical form
+        }.map { |lexical_form_yomi, morphemes_of_same_yomi|
           lexical_forms = morphemes_of_same_yomi.map { |m| m.feature.lexical_form }
           section_heading =
             "#{lexical_form_yomi}: " +
@@ -248,10 +250,12 @@ module VariantsJa
       variants =
         morphemes_by_yomi.select { |_lexical_form_yomi, morphemes_of_same_yomi|
           morphemes_of_same_yomi.map { |m| m.feature.lexical_form }.sort.uniq.size >= 2
-        }.to_h
+        }
 
       report_lines =
-        variants.map { |lexical_form_yomi, morphemes_of_same_yomi|
+        variants.to_a.sort_by { |lexical_form_yomi, morphemes_of_same_yomi|
+          lexical_form_yomi # sort records by yomi of lexical form
+        }.map { |lexical_form_yomi, morphemes_of_same_yomi|
           morphemes_of_same_yomi.map { |m|
             line = @lines[m.line_index]
             line_number = m.line_index + 1

@@ -177,6 +177,21 @@ describe "VariantsJa" do
           \tL5, C1\t試行
           EOS
       end
+
+      it "returns report sorted in alphabetical order of section headings" do
+        input = <<-EOS
+          思考と試行。意思と意志。
+          EOS
+        doc = VariantsJa::Document.new(input)
+        doc.report_variants_text.should eq <<-EOS.chomp
+          イシ: 意思 (1) | 意志 (1)
+          \tL1, C7\t考と試行。意思と意志。
+          \tL1, C10\t行。意思と意志。
+          シコウ: 思考 (1) | 試行 (1)
+          \tL1, C1\t思考と試行。意
+          \tL1, C4\t思考と試行。意思と意
+          EOS
+      end
     end
 
     describe "#report_variants_tsv" do
@@ -190,6 +205,20 @@ describe "VariantsJa" do
           lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
           イウ\t1\t12\t言う\t言っ\t、と警官は言った。
           イウ\t2\t13\tいう\tいう\tあるのだという。
+          EOS
+      end
+
+      it "returns report sorted in alphabetical order of yomi of lexical form" do
+        input = <<-EOS
+          思考と試行。意思と意志。
+          EOS
+        doc = VariantsJa::Document.new(input)
+        doc.report_variants_tsv.should eq <<-EOS.chomp
+          lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
+          イシ\t1\t7\t意思\t意思\t考と試行。意思と意志。
+          イシ\t1\t10\t意志\t意志\t行。意思と意志。
+          シコウ\t1\t1\t思考\t思考\t思考と試行。意
+          シコウ\t1\t4\t試行\t試行\t思考と試行。意思と意
           EOS
       end
     end
