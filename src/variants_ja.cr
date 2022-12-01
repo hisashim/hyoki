@@ -181,7 +181,7 @@ module VariantsJa
       },
     }
 
-    def report_variants_text(context_before = 5, context_after = 5, tty = false)
+    def report_variants_text(context_before = 5, context_after = 5, sort_order = :alphabetical, tty = false)
       excerpt_formatter =
         if tty
           EXCERPT_FORMATTER[:tty]
@@ -199,10 +199,20 @@ module VariantsJa
           morphemes_of_same_yomi.map { |m| m.feature.lexical_form }.sort.uniq.size >= 2
         }
 
+      variants_sorted =
+        case sort_order
+        when :alphabetical
+          variants.to_a.sort_by { |lexical_form_yomi, morphemes_of_same_yomi|
+            lexical_form_yomi # sort sections by yomi of lexical form
+          }
+        when :appearance
+          variants.to_a
+        else
+          raise "Invalid sort order: #{sort_order}"
+        end
+
       report_sections =
-        variants.to_a.sort_by { |lexical_form_yomi, morphemes_of_same_yomi|
-          lexical_form_yomi # sort sections by yomi of lexical form
-        }.map { |lexical_form_yomi, morphemes_of_same_yomi|
+        variants_sorted.map { |lexical_form_yomi, morphemes_of_same_yomi|
           lexical_forms = morphemes_of_same_yomi.map { |m| m.feature.lexical_form }
           section_heading =
             "#{lexical_form_yomi}: " +
@@ -236,7 +246,7 @@ module VariantsJa
       report = report_sections.join("\n")
     end
 
-    def report_variants_tsv(context_before = 5, context_after = 5)
+    def report_variants_tsv(context_before = 5, context_after = 5, sort_order = :alphabetical)
       characters_to_escape =
         {"\n" => "\\n", "\t" => "\\t", "\r" => "\\r", "\\" => "\\\\"}
 
@@ -252,10 +262,20 @@ module VariantsJa
           morphemes_of_same_yomi.map { |m| m.feature.lexical_form }.sort.uniq.size >= 2
         }
 
+      variants_sorted =
+        case sort_order
+        when :alphabetical
+          variants.to_a.sort_by { |lexical_form_yomi, morphemes_of_same_yomi|
+            lexical_form_yomi # sort records by yomi of lexical form
+          }
+        when :appearance
+          variants.to_a
+        else
+          raise "Invalid sort order: #{sort_order}"
+        end
+
       report_lines =
-        variants.to_a.sort_by { |lexical_form_yomi, morphemes_of_same_yomi|
-          lexical_form_yomi # sort records by yomi of lexical form
-        }.map { |lexical_form_yomi, morphemes_of_same_yomi|
+        variants_sorted.map { |lexical_form_yomi, morphemes_of_same_yomi|
           morphemes_of_same_yomi.map { |m|
             line = @lines[m.line_index]
             line_number = m.line_index + 1
@@ -308,10 +328,12 @@ module VariantsJa
       output_format : Symbol,
       tty : Symbol,
       context : Int32,
+      sort_order : Symbol,
       mecab_dict_dir : String | Nil,
       show_help : Bool,
       show_version : Bool do
-      setter :output_format, :tty, :context, :mecab_dict_dir, :show_help, :show_version
+      setter :output_format, :tty, :context, :sort_order, :mecab_dict_dir,
+        :show_help, :show_version
     end
 
     DEFAULT_CONFIG =
@@ -319,6 +341,7 @@ module VariantsJa
         output_format: :text,
         tty: :auto,
         context: 5,
+        sort_order: :alphabetical,
         mecab_dict_dir: nil,
         show_help: false,
         show_version: false
@@ -373,6 +396,18 @@ module VariantsJa
               raise "Invalid option value: context must be integer: #{ex.message}"
             end
         }
+        o.on("--sort-order=alphabetical|appearance", <<-EOS.chomp) { |s|
+          Specify how report sections/records should be sorted \
+          (default: #{c.sort_order})
+          EOS
+          c.sort_order =
+            case s
+            when "alphabetical" then :alphabetical
+            when "appearance"   then :appearance
+            else
+              raise "Invalid option value: sort order must be alphabetical or appearance: #{s}"
+            end
+        }
         o.on("--mecab-dict-dir=DIR", <<-EOS.chomp) { |s|
           Specify MeCab dictionary directory to use \
           (e.g. /var/lib/mecab/dic/naist-jdic)
@@ -417,10 +452,12 @@ module VariantsJa
         when :text
           doc.report_variants_text(context_before: c.context,
             context_after: c.context,
+            sort_order: c.sort_order,
             tty: tty)
         when :tsv
           doc.report_variants_tsv(context_before: c.context,
-            context_after: c.context)
+            context_after: c.context,
+            sort_order: c.sort_order)
         else
           raise "Invalid output format: #{c.output_format.inspect}"
         end
