@@ -181,9 +181,9 @@ module VariantsJa
       },
     }
 
-    def report_variants_text(context_before = 5, context_after = 5, sort_order = :alphabetical, tty = false)
+    def report_variants_text(context_before = 5, context_after = 5, sort = :alphabetical, color = false)
       excerpt_formatter =
-        if tty
+        if color
           EXCERPT_FORMATTER[:tty]
         else
           EXCERPT_FORMATTER[:asis]
@@ -200,7 +200,7 @@ module VariantsJa
         }
 
       variants_sorted =
-        case sort_order
+        case sort
         when :alphabetical
           variants.to_a.sort_by { |lexical_form_yomi, morphemes_of_same_yomi|
             lexical_form_yomi # sort sections by yomi of lexical form
@@ -208,7 +208,7 @@ module VariantsJa
         when :appearance
           variants.to_a
         else
-          raise "Invalid sort order: #{sort_order}"
+          raise "Invalid sort order: #{sort}"
         end
 
       report_sections =
@@ -246,7 +246,7 @@ module VariantsJa
       report = report_sections.join("\n")
     end
 
-    def report_variants_tsv(context_before = 5, context_after = 5, sort_order = :alphabetical)
+    def report_variants_tsv(context_before = 5, context_after = 5, sort = :alphabetical)
       characters_to_escape =
         {"\n" => "\\n", "\t" => "\\t", "\r" => "\\r", "\\" => "\\\\"}
 
@@ -263,7 +263,7 @@ module VariantsJa
         }
 
       variants_sorted =
-        case sort_order
+        case sort
         when :alphabetical
           variants.to_a.sort_by { |lexical_form_yomi, morphemes_of_same_yomi|
             lexical_form_yomi # sort records by yomi of lexical form
@@ -271,7 +271,7 @@ module VariantsJa
         when :appearance
           variants.to_a
         else
-          raise "Invalid sort order: #{sort_order}"
+          raise "Invalid sort order: #{sort}"
         end
 
       report_lines =
@@ -326,22 +326,22 @@ module VariantsJa
   module CLI
     record Config,
       output_format : Symbol,
-      tty : Symbol,
+      color : Symbol,
       context : Int32,
-      sort_order : Symbol,
+      sort : Symbol,
       mecab_dict_dir : String | Nil,
       show_help : Bool,
       show_version : Bool do
-      setter :output_format, :tty, :context, :sort_order, :mecab_dict_dir,
+      setter :output_format, :color, :context, :sort, :mecab_dict_dir,
         :show_help, :show_version
     end
 
     DEFAULT_CONFIG =
       Config.new(
         output_format: :text,
-        tty: :auto,
+        color: :auto,
         context: 5,
-        sort_order: :alphabetical,
+        sort: :alphabetical,
         mecab_dict_dir: nil,
         show_help: false,
         show_version: false
@@ -364,26 +364,25 @@ module VariantsJa
           Options:
           EOS
         o.on("--output-format=text|tsv", <<-EOS.chomp) { |s|
-          Specify output format (default: #{c.output_format})
+          Choose output format (default: #{c.output_format})
           EOS
           c.output_format =
             case s
             when "text" then :text
             when "tsv"  then :tsv
-            else             raise "Invalid output format"
+            else             raise "Invalid value for output format: #{s}"
             end
         }
-        o.on("--tty=always|never|auto", <<-EOS.chomp) { |s|
-          Enable/disable highlighting using ANSI escape sequence for text output \
-          (default: #{c.tty})
+        o.on("--color=auto|always|never", <<-EOS.chomp) { |s|
+          Enable/disable excerpt highlighting using ANSI escape sequence \
+          for text output (default: #{c.color})
           EOS
-          c.tty =
+          c.color =
             case s
+            when "auto"   then :auto
             when "always" then :always
             when "never"  then :never
-            when "auto"   then :auto
-            else
-              raise "Invalid option value: tty must be always, never, or auto"
+            else               raise "Invalid value for color: #{s}"
             end
         }
         o.on("--context=N", <<-EOS.chomp) { |s|
@@ -393,19 +392,18 @@ module VariantsJa
             begin
               s.to_i
             rescue ex : ArgumentError
-              raise "Invalid option value: context must be integer: #{ex.message}"
+              raise "Invalid value for context: #{ex.message}"
             end
         }
-        o.on("--sort-order=alphabetical|appearance", <<-EOS.chomp) { |s|
-          Specify how report sections/records should be sorted \
-          (default: #{c.sort_order})
+        o.on("--sort=alphabetical|appearance", <<-EOS.chomp) { |s|
+          Specify how report items/records should be sorted \
+          (default: #{c.sort})
           EOS
-          c.sort_order =
+          c.sort =
             case s
             when "alphabetical" then :alphabetical
             when "appearance"   then :appearance
-            else
-              raise "Invalid option value: sort order must be alphabetical or appearance: #{s}"
+            else                     raise "Invalid value for sort: #{s}"
             end
         }
         o.on("--mecab-dict-dir=DIR", <<-EOS.chomp) { |s|
@@ -414,12 +412,9 @@ module VariantsJa
           EOS
           c.mecab_dict_dir =
             case
-            when !(Dir.exists? s)
-              raise "Invalid option value: directory not found: #{s}"
-            when !(File.readable? s)
-              raise "Invalid option value: directory not readable: #{s}"
-            else
-              s
+            when !(Dir.exists? s)    then raise "Directory not found: #{s}"
+            when !(File.readable? s) then raise "Directory not readable: #{s}"
+            else                          s
             end
         }
         o.on("--help", "Show help message") { c.show_help = true }
@@ -437,12 +432,12 @@ module VariantsJa
         exit 0
       end
 
-      tty =
-        case c.tty
+      color =
+        case c.color
         when :auto   then STDOUT.tty?
         when :always then true
         when :never  then false
-        else              raise "Invalid tty option value: #{c.tty}"
+        else              raise "Invalid tty option value: #{c.color}"
         end
 
       doc = VariantsJa::Document.new(ARGF.gets_to_end, mecab_dict_dir: c.mecab_dict_dir)
@@ -452,12 +447,12 @@ module VariantsJa
         when :text
           doc.report_variants_text(context_before: c.context,
             context_after: c.context,
-            sort_order: c.sort_order,
-            tty: tty)
+            sort: c.sort,
+            color: color)
         when :tsv
           doc.report_variants_tsv(context_before: c.context,
             context_after: c.context,
-            sort_order: c.sort_order)
+            sort: c.sort)
         else
           raise "Invalid output format: #{c.output_format.inspect}"
         end

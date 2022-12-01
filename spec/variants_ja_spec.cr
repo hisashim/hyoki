@@ -183,7 +183,7 @@ describe "VariantsJa" do
           思考と試行。意思と意志。
           EOS
         doc = VariantsJa::Document.new(input)
-        doc.report_variants_text(sort_order: :alphabetical).should eq <<-EOS.chomp
+        doc.report_variants_text(sort: :alphabetical).should eq <<-EOS.chomp
           イシ: 意思 (1) | 意志 (1)
           \tL1, C7\t考と試行。意思と意志。
           \tL1, C10\t行。意思と意志。
@@ -191,7 +191,7 @@ describe "VariantsJa" do
           \tL1, C1\t思考と試行。意
           \tL1, C4\t思考と試行。意思と意
           EOS
-        doc.report_variants_text(sort_order: :appearance).should eq <<-EOS.chomp
+        doc.report_variants_text(sort: :appearance).should eq <<-EOS.chomp
           シコウ: 思考 (1) | 試行 (1)
           \tL1, C1\t思考と試行。意
           \tL1, C4\t思考と試行。意思と意
@@ -221,14 +221,14 @@ describe "VariantsJa" do
           思考と試行。意思と意志。
           EOS
         doc = VariantsJa::Document.new(input)
-        doc.report_variants_tsv(sort_order: :alphabetical).should eq <<-EOS.chomp
+        doc.report_variants_tsv(sort: :alphabetical).should eq <<-EOS.chomp
           lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
           イシ\t1\t7\t意思\t意思\t考と試行。意思と意志。
           イシ\t1\t10\t意志\t意志\t行。意思と意志。
           シコウ\t1\t1\t思考\t思考\t思考と試行。意
           シコウ\t1\t4\t試行\t試行\t思考と試行。意思と意
           EOS
-        doc.report_variants_tsv(sort_order: :appearance).should eq <<-EOS.chomp
+        doc.report_variants_tsv(sort: :appearance).should eq <<-EOS.chomp
           lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
           シコウ\t1\t1\t思考\t思考\t思考と試行。意
           シコウ\t1\t4\t試行\t試行\t思考と試行。意思と意
