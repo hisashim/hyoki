@@ -161,12 +161,12 @@ module VariantsJa
     @parser : Fucoidan::Fucoidan
     @yomi_parser : Fucoidan::Fucoidan
 
-    def initialize(string,
-                   parser = Fucoidan::Fucoidan.new,
-                   yomi_parser = Fucoidan::Fucoidan.new("-Oyomi"))
-      @lines = string.lines.map_with_index { |str, i| Line.new(str, i, parser) }
-      @parser = parser
-      @yomi_parser = yomi_parser
+    def initialize(string, mecab_dict_dir = nil)
+      mecab_opts = [] of String
+      mecab_opts << "--dicdir=#{mecab_dict_dir}" if mecab_dict_dir
+      @parser = Fucoidan::Fucoidan.new(mecab_opts.join(" "))
+      @yomi_parser = Fucoidan::Fucoidan.new((mecab_opts + ["-Oyomi"]).join(" "))
+      @lines = string.lines.map_with_index { |str, i| Line.new(str, i, @parser) }
     end
 
     getter :lines
@@ -373,7 +373,15 @@ module VariantsJa
           Specify MeCab dictionary directory to use \
           (e.g. /var/lib/mecab/dic/naist-jdic)
           EOS
-          c.mecab_dict_dir = s
+          c.mecab_dict_dir =
+            case
+            when !(Dir.exists? s)
+              raise "Invalid option value: directory not found: #{s}"
+            when !(File.readable? s)
+              raise "Invalid option value: directory not readable: #{s}"
+            else
+              s
+            end
         }
         o.on("--help", "Show help message") { c.show_help = true }
         o.on("--version", "Show version") { c.show_version = true }
@@ -398,7 +406,7 @@ module VariantsJa
         else              raise "Invalid tty option value: #{c.tty}"
         end
 
-      doc = VariantsJa::Document.new(ARGF.gets_to_end)
+      doc = VariantsJa::Document.new(ARGF.gets_to_end, mecab_dict_dir: c.mecab_dict_dir)
 
       report =
         case c.output_format
