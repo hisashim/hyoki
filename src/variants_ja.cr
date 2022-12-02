@@ -171,31 +171,32 @@ module VariantsJa
 
     getter :lines
 
-    def report_variants_text(context_before = 5, context_after = 5, sort = :alphabetical, color = false)
+    def variants(lines, yomi_parser, sort)
       morphemes_by_yomi =
-        @lines.map { |l| l.morphemes }.flatten.group_by { |m|
-          VariantsJa.yomi(m.feature.lexical_form, @yomi_parser)
+        lines.map { |l| l.morphemes }.flatten.group_by { |m|
+          VariantsJa.yomi(m.feature.lexical_form, yomi_parser)
         }
-
       variants =
         morphemes_by_yomi.select { |_lexical_form_yomi, morphemes_of_same_yomi|
-          morphemes_of_same_yomi.map { |m| m.feature.lexical_form }.sort.uniq.size >= 2
+          morphemes_of_same_yomi.map { |m| m.feature.lexical_form }.uniq.size >= 2
         }
+      case sort
+      when :alphabetical
+        variants.to_a.sort_by { |lexical_form_yomi, _morphemes_of_same_yomi|
+          lexical_form_yomi # sort sections by yomi of lexical form
+        }
+      when :appearance
+        variants.to_a
+      else
+        raise "Invalid sort order: #{sort}"
+      end
+    end
 
-      variants_sorted =
-        case sort
-        when :alphabetical
-          variants.to_a.sort_by { |lexical_form_yomi, morphemes_of_same_yomi|
-            lexical_form_yomi # sort sections by yomi of lexical form
-          }
-        when :appearance
-          variants.to_a
-        else
-          raise "Invalid sort order: #{sort}"
-        end
+    def report_variants_text(context_before = 5, context_after = 5, sort = :alphabetical, color = false)
+      variants = variants(@lines, @yomi_parser, sort)
 
       report_sections =
-        variants_sorted.map { |lexical_form_yomi, morphemes_of_same_yomi|
+        variants.map { |lexical_form_yomi, morphemes_of_same_yomi|
           lexical_forms = morphemes_of_same_yomi.map { |m| m.feature.lexical_form }
           section_heading =
             "#{lexical_form_yomi}: " +
@@ -240,30 +241,10 @@ module VariantsJa
       characters_to_escape =
         {"\n" => "\\n", "\t" => "\\t", "\r" => "\\r", "\\" => "\\\\"}
 
-      morphemes_by_yomi =
-        @lines.map { |m| m.morphemes }.flatten.group_by { |m|
-          VariantsJa.yomi(m.feature.lexical_form, @yomi_parser)
-        }
-
-      variants =
-        morphemes_by_yomi.select { |_lexical_form_yomi, morphemes_of_same_yomi|
-          morphemes_of_same_yomi.map { |m| m.feature.lexical_form }.sort.uniq.size >= 2
-        }
-
-      variants_sorted =
-        case sort
-        when :alphabetical
-          variants.to_a.sort_by { |lexical_form_yomi, morphemes_of_same_yomi|
-            lexical_form_yomi # sort records by yomi of lexical form
-          }
-        when :appearance
-          variants.to_a
-        else
-          raise "Invalid sort order: #{sort}"
-        end
+      variants = variants(@lines, @yomi_parser, sort)
 
       report_lines =
-        variants_sorted.map { |lexical_form_yomi, morphemes_of_same_yomi|
+        variants.map { |lexical_form_yomi, morphemes_of_same_yomi|
           morphemes_of_same_yomi.map { |m|
             line = @lines[m.line_index]
             line_number = m.line_index + 1
