@@ -171,24 +171,7 @@ module VariantsJa
 
     getter :lines
 
-    EXCERPT_FORMATTER = {
-      :tty => ->(context_before : String, body : String, context_after : String) {
-        # 1:Bold, 4:Underline, 7:Invert, 0:Reset
-        [context_before, "\e[1;4;7;22m", body, "\e[0m", context_after].join
-      },
-      :asis => ->(context_before : String, body : String, context_after : String) {
-        [context_before, body, context_after].join
-      },
-    }
-
     def report_variants_text(context_before = 5, context_after = 5, sort = :alphabetical, color = false)
-      excerpt_formatter =
-        if color
-          EXCERPT_FORMATTER[:tty]
-        else
-          EXCERPT_FORMATTER[:asis]
-        end
-
       morphemes_by_yomi =
         @lines.map { |l| l.morphemes }.flatten.group_by { |m|
           VariantsJa.yomi(m.feature.lexical_form, @yomi_parser)
@@ -234,9 +217,16 @@ module VariantsJa
               excerpt_context_after =
                 line.body[(m.string_index + m.surface.size), context_after]
               excerpt =
-                excerpt_formatter.call(excerpt_context_before,
-                  excerpt_body,
-                  excerpt_context_after)
+                if color
+                  # 1: Bold, 4: Underline, 7: Invert, 0: Reset
+                  [excerpt_context_before,
+                   "\e[1;4;7;22m", excerpt_body, "\e[0m",
+                   excerpt_context_after].join
+                else
+                  [excerpt_context_before,
+                   excerpt_body,
+                   excerpt_context_after].join
+                end
               "\tL#{line_number}, C#{character_number}\t#{excerpt}"
             }
           section_body = section_lines.join("\n")
@@ -249,8 +239,6 @@ module VariantsJa
     def report_variants_tsv(context_before = 5, context_after = 5, sort = :alphabetical)
       characters_to_escape =
         {"\n" => "\\n", "\t" => "\\t", "\r" => "\\r", "\\" => "\\\\"}
-
-      excerpt_formatter = EXCERPT_FORMATTER[:asis]
 
       morphemes_by_yomi =
         @lines.map { |m| m.morphemes }.flatten.group_by { |m|
@@ -290,9 +278,7 @@ module VariantsJa
             excerpt_context_after =
               line.body[(m.string_index + m.surface.size), context_after]
             excerpt =
-              excerpt_formatter.call(excerpt_context_before,
-                excerpt_body,
-                excerpt_context_after)
+              [excerpt_context_before, excerpt_body, excerpt_context_after].join
             a_line =
               [
                 lexical_form_yomi,

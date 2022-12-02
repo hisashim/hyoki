@@ -159,6 +159,19 @@ describe "VariantsJa" do
             EOS
       end
 
+      it "returns report with highlighting when color is true" do
+        input = <<-EOS
+          流れよわが涙、と警官は言った。
+          そういうことがあるのだという。
+          EOS
+        doc = VariantsJa::Document.new(input)
+        doc.report_variants_text(color: true).should eq <<-EOS.chomp
+          イウ: 言う (1) | いう (1)
+          \tL1, C12\t、と警官は\e[1;4;7;22m言っ\e[0mた。
+          \tL2, C13\tあるのだと\e[1;4;7;22mいう\e[0m。
+          EOS
+      end
+
       it "returns report on variants, without context if none" do
         input = <<-EOS
           志向
