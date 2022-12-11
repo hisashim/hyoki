@@ -17,14 +17,14 @@ describe "VariantsJa" do
       end
     end
 
-    describe "#line_index" do
-      it "returns the index of the line to which the morpheme belongs" do
+    describe "#line" do
+      it "returns the line to which the morpheme belongs" do
         input = <<-EOS
           L1
           L2
           EOS
-        VariantsJa::Document.new(input).lines[0].morphemes[0].line_index.should eq 0
-        VariantsJa::Document.new(input).lines[1].morphemes[0].line_index.should eq 1
+        VariantsJa::Document.new(input).lines[0].morphemes[0].line.index.should eq 0
+        VariantsJa::Document.new(input).lines[1].morphemes[0].line.index.should eq 1
       end
     end
 
@@ -111,7 +111,9 @@ describe "VariantsJa" do
         input = <<-EOS
           わかりません。
           EOS
-        morphemes = VariantsJa.string_to_morphemes(input, 0, Fucoidan::Fucoidan.new)
+        parser = Fucoidan::Fucoidan.new
+        line = VariantsJa::Document::Line.new(input, 0, parser)
+        morphemes = VariantsJa.string_to_morphemes(input, line, parser)
         morphemes.map { |m| m.surface }.should eq ["わかり", "ませ", "ん", "。"]
       end
     end
