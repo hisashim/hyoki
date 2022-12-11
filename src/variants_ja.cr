@@ -6,6 +6,8 @@ module VariantsJa
 
   class Morpheme
     class Feature
+      FILLER = ["*", "*", "*", "*", "*", "*", "*", "*", "*"]
+
       @part_of_speech : String
       @part_of_speech_subcategory1 : String
       @part_of_speech_subcategory2 : String
@@ -17,8 +19,8 @@ module VariantsJa
       @pronunciation : String
 
       def initialize(feature_csv)
-        # kludge: padding values because number of values is not predictable
-        values = feature_csv.split(",") + Array(String).new(99, "*")
+        # kludge: padding values, since the number of values is not predictable
+        values = feature_csv.split(",").concat FILLER
         @part_of_speech = values[0]
         @part_of_speech_subcategory1 = values[1]
         @part_of_speech_subcategory2 = values[2]
