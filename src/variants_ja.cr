@@ -5,7 +5,7 @@ module VariantsJa
   VERSION = "0.1.0"
 
   class Morpheme
-    class Feature
+    struct Feature
       FILLER = ["*", "*", "*", "*", "*", "*", "*", "*", "*"]
 
       @part_of_speech : String
@@ -137,7 +137,7 @@ module VariantsJa
   class Document
     RE_LINE = /^(.*?)((?:\r\n|\r|\n)*)$/
 
-    class Line
+    struct Line
       @source : String
       @body : String
       @eol : String
