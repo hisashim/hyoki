@@ -98,13 +98,12 @@ module VariantsJa
       else
         str_idxs = string_indexes(@source_string, @surface)
         str_len = @source_string.size
-        str_idx_proportions = str_idxs.map { |str_idx| str_idx.to_f / str_len }
-        str_idxs_to_proportions = str_idxs.zip(str_idx_proportions).to_h
-        morpheme_idx_proportion = @index.to_f / @max_index
+        # add 0.01 to avoid divide-by-zero error
+        str_idx_proportions = str_idxs.map { |str_idx| (str_idx.to_f / str_len) + 0.01 }
+        morpheme_idx_proportion = (@index.to_f / @max_index) + 0.01
         str_idx_candidates =
-          str_idxs_to_proportions.to_a.sort_by { |_str_idx, str_idx_prop|
-            # add 0.01 to avoid dealing with zero
-            ((str_idx_prop + 0.01) / (morpheme_idx_proportion + 0.01) - 1).abs
+          str_idxs.zip(str_idx_proportions).sort_by { |_str_idx, str_idx_prop|
+            (str_idx_prop / morpheme_idx_proportion - 1.0).abs
           }
         @string_index = str_idx_candidates.first.first # best guess
       end
