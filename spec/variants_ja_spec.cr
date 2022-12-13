@@ -66,6 +66,16 @@ describe "VariantsJa" do
         lines[0].morphemes[10].string_index.should eq 14
       end
 
+      it "works correctly for very long input" do
+        # this input consists of 1000 morphemes, and morphemes[0]
+        # starts at input[1] because of the preceding space
+        input = " " + ("0あ1い2う3え4お5か6き7く8け9こ" * 50)
+        lines = VariantsJa::Document.new(input).lines
+        lines[0].morphemes[0].string_index.should eq 1
+        lines[0].morphemes[100].string_index.should eq 101
+        lines[0].morphemes[990].string_index.should eq 991
+      end
+
       it "handles empty input without problems" do
         input = <<-EOS.chomp
           EOS
