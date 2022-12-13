@@ -5,10 +5,9 @@ SPEC_OPTS = --error-trace
 
 all: check docs build
 
-check: formatcheck spec
+check: formatcheck shardscheck spec
 
 spec:
-	shards check || shards install
 	$(CRYSTAL) spec $(SPEC_OPTS) $@ | tee $@.log
 
 %_spec: spec/%_spec.cr
@@ -16,6 +15,9 @@ spec:
 
 formatcheck:
 	$(CRYSTAL) tool format --check src spec
+
+shardscheck:
+	shards check || shards install
 
 docs:
 	$(CRYSTAL) docs
@@ -29,4 +31,4 @@ mostlyclean:
 clean: mostlyclean
 	rm -fr lib/
 
-.PHONY: all check spec formatcheck docs mostlyclean clean
+.PHONY: all check spec formatcheck shardscheck docs mostlyclean clean
