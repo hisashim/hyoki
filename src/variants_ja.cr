@@ -226,7 +226,7 @@ module VariantsJa
                 if color
                   # 1: Bold, 4: Underline, 7: Invert, 0: Reset
                   [excerpt_context_before,
-                   "\e[1;4;7;22m", excerpt_body, "\e[0m",
+                   "\e[1;4;7m", excerpt_body, "\e[0m",
                    excerpt_context_after].join
                 else
                   [excerpt_context_before,

@@ -179,8 +179,8 @@ describe "VariantsJa" do
         doc = VariantsJa::Document.new(input)
         doc.report_variants_text(color: true).should eq <<-EOS.chomp
           イウ: 言う (1) | いう (1)
-          \tL1, C12\t、と警官は\e[1;4;7;22m言っ\e[0mた。
-          \tL2, C13\tあるのだと\e[1;4;7;22mいう\e[0m。
+          \tL1, C12\t、と警官は\e[1;4;7m言っ\e[0mた。
+          \tL2, C13\tあるのだと\e[1;4;7mいう\e[0m。
           EOS
       end
 
