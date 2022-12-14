@@ -294,10 +294,131 @@ module VariantsJa
       report =
         [report_header, report_lines.flatten.join("\n")].join("\n")
     end
+
+    def heteronyms(lines, sort)
+      morphemes_by_surface =
+        lines.map { |l| l.morphemes }.flatten.group_by { |m|
+          m.surface
+        }
+      heteronyms =
+        morphemes_by_surface.select { |_surface, morphemes_of_same_surface|
+          morphemes_of_same_surface.map { |m| m.feature.yomi }.uniq.size >= 2
+        }
+      case sort
+      when :alphabetical
+        heteronyms.to_a.sort_by { |surface, _morphemes_of_same_surface|
+          surface
+        }
+      when :appearance
+        heteronyms.to_a
+      else
+        raise "Invalid sort order: #{sort}"
+      end
+    end
+
+    def report_heteronyms_text(context_before = 5, context_after = 5, sort = :alphabetical, color = false)
+      heteronyms = heteronyms(@lines, sort)
+
+      report_sections =
+        heteronyms.map { |surface, morphemes_of_same_surface|
+          yomis = morphemes_of_same_surface.map { |m| m.feature.yomi }
+          section_heading =
+            "#{surface}: " +
+              yomis.tally.map { |yomi, count|
+                "#{yomi} (#{count})"
+              }.join(" | ")
+          section_lines =
+            morphemes_of_same_surface.map { |m|
+              line = m.line
+              string_index = m.string_index
+              line_number = line.index + 1
+              character_number = string_index + 1
+              excerpt_context_before =
+                if (leftmost = string_index - context_before) && leftmost.negative?
+                  line.body[0, string_index]
+                else
+                  line.body[leftmost, context_before]
+                end
+              excerpt_body = m.surface
+              excerpt_context_after =
+                line.body[(string_index + excerpt_body.size), context_after]
+              excerpt =
+                if color
+                  # 1: Bold, 4: Underline, 7: Invert, 0: Reset
+                  [excerpt_context_before,
+                   "\e[1;4;7m", excerpt_body, "\e[0m",
+                   excerpt_context_after].join
+                else
+                  [excerpt_context_before,
+                   excerpt_body,
+                   excerpt_context_after].join
+                end
+              "\tL#{line_number}, C#{character_number}\t#{excerpt}"
+            }
+          section_body = section_lines.join("\n")
+          section = [section_heading, section_body].join("\n")
+        }
+
+      report = report_sections.join("\n")
+    end
+
+    def report_heteronyms_tsv(context_before = 5, context_after = 5, sort = :alphabetical)
+      characters_to_escape =
+        {"\n" => "\\n", "\t" => "\\t", "\r" => "\\r", "\\" => "\\\\"}
+
+      heteronyms = heteronyms(@lines, sort)
+
+      report_lines =
+        heteronyms.map { |surface, morphemes_of_same_surface|
+          morphemes_of_same_surface.map { |m|
+            line = m.line
+            string_index = m.string_index
+            line_number = line.index + 1
+            character_number = string_index + 1
+            excerpt_context_before =
+              if (leftmost = string_index - context_before) && leftmost.negative?
+                line.body[0, string_index]
+              else
+                line.body[leftmost, context_before]
+              end
+            excerpt_body = m.surface
+            excerpt_context_after =
+              line.body[(string_index + excerpt_body.size), context_after]
+            excerpt =
+              [excerpt_context_before, excerpt_body, excerpt_context_after].join
+            a_line =
+              [
+                surface,
+                line_number,
+                character_number,
+                m.feature.yomi,
+                m.surface,
+                excerpt,
+              ].map { |v|
+                # escape for TSV
+                v.to_s.gsub(characters_to_escape.keys.join("|"), characters_to_escape)
+              }.join("\t")
+          }
+        }
+
+      report_header =
+        [
+          "surface",
+          "line",
+          "character",
+          "yomi",
+          "surface",
+          "excerpt",
+        ].join("\t")
+
+      report =
+        [report_header, report_lines.flatten.join("\n")].join("\n")
+    end
   end
 
   module CLI
     record Config,
+      report_type : Symbol,
       output_format : Symbol,
       color : Symbol,
       context : Int32,
@@ -305,12 +426,13 @@ module VariantsJa
       mecab_dict_dir : String | Nil,
       show_help : Bool,
       show_version : Bool do
-      setter :output_format, :color, :context, :sort, :mecab_dict_dir,
-        :show_help, :show_version
+      setter :report_type, :output_format, :color, :context, :sort,
+        :mecab_dict_dir, :show_help, :show_version
     end
 
     DEFAULT_CONFIG =
       Config.new(
+        report_type: :variants,
         output_format: :text,
         color: :auto,
         context: 5,
@@ -336,6 +458,16 @@ module VariantsJa
 
           Options:
           EOS
+        o.on("--report-type=variants|heteronyms", <<-EOS.chomp) { |s|
+          Choose report type (default: #{c.report_type})
+          EOS
+          c.report_type =
+            case s
+            when "variants"   then :variants
+            when "heteronyms" then :heteronyms
+            else                   raise "Invalid value for report type: #{s}"
+            end
+        }
         o.on("--output-format=text|tsv", <<-EOS.chomp) { |s|
           Choose output format (default: #{c.output_format})
           EOS
@@ -416,19 +548,23 @@ module VariantsJa
       doc = VariantsJa::Document.new(ARGF.gets_to_end, mecab_dict_dir: c.mecab_dict_dir)
 
       report =
-        case c.output_format
-        when :text
-          doc.report_variants_text(context_before: c.context,
-            context_after: c.context,
-            sort: c.sort,
-            color: color)
-        when :tsv
-          doc.report_variants_tsv(context_before: c.context,
-            context_after: c.context,
-            sort: c.sort)
+        case c.report_type
+        when :variants
+          case c.output_format
+          when :text then doc.report_variants_text(context_before: c.context, context_after: c.context, sort: c.sort, color: color)
+          when :tsv  then doc.report_variants_tsv(context_before: c.context, context_after: c.context, sort: c.sort)
+          else            raise "Invalid output format: #{c.output_format.inspect}"
+          end
+        when :heteronyms
+          case c.output_format
+          when :text then doc.report_heteronyms_text(context_before: c.context, context_after: c.context, sort: c.sort, color: color)
+          when :tsv  then doc.report_heteronyms_tsv(context_before: c.context, context_after: c.context, sort: c.sort)
+          else            raise "Invalid output format: #{c.output_format.inspect}"
+          end
         else
-          raise "Invalid output format: #{c.output_format.inspect}"
+          raise "Invalid report type: #{c.report_type.inspect}"
         end
+
       puts_or_print report unless report.empty?
     end
   end

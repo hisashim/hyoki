@@ -262,5 +262,35 @@ describe "VariantsJa" do
           EOS
       end
     end
+
+    describe "#report_heteronyms_text" do
+      it "returns report on variants in text format" do
+        input = <<-EOS
+          区切り方がわかりません。区切りかたがわかりません。
+          その方がいいでしょう。そのほうがいいでしょう。
+          EOS
+        doc = VariantsJa::Document.new(input)
+        doc.report_heteronyms_text.should eq <<-EOS.chomp
+          方: カタ (1) | ホウ (1)
+          \tL1, C4\t区切り方がわかりま
+          \tL2, C3\tその方がいいでし
+          EOS
+      end
+    end
+
+    describe "#report_heteronyms_tsv" do
+      it "returns report in TSV format" do
+        input = <<-EOS
+          区切り方がわかりません。区切りかたがわかりません。
+          その方がいいでしょう。そのほうがいいでしょう。
+          EOS
+        doc = VariantsJa::Document.new(input)
+        doc.report_heteronyms_tsv.should eq <<-EOS.chomp
+          surface\tline\tcharacter\tyomi\tsurface\texcerpt
+          方\t1\t4\tカタ\t方\t区切り方がわかりま
+          方\t2\t3\tホウ\t方\tその方がいいでし
+          EOS
+      end
+    end
   end
 end
