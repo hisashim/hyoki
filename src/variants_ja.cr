@@ -213,6 +213,7 @@ module VariantsJa
               string_index = m.string_index
               line_number = line.index + 1
               character_number = string_index + 1
+              lexical_form = m.feature.lexical_form
               excerpt_context_before =
                 if (leftmost = string_index - context_before) && leftmost.negative?
                   line.body[0, string_index]
@@ -233,7 +234,7 @@ module VariantsJa
                    excerpt_body,
                    excerpt_context_after].join
                 end
-              "\tL#{line_number}, C#{character_number}\t#{excerpt}"
+              "\tL#{line_number}, C#{character_number}\t#{lexical_form}\t#{excerpt}"
             }
           section_body = section_lines.join("\n")
           section = [section_heading, section_body].join("\n")
@@ -333,6 +334,7 @@ module VariantsJa
               string_index = m.string_index
               line_number = line.index + 1
               character_number = string_index + 1
+              yomi = m.feature.yomi
               excerpt_context_before =
                 if (leftmost = string_index - context_before) && leftmost.negative?
                   line.body[0, string_index]
@@ -353,7 +355,7 @@ module VariantsJa
                    excerpt_body,
                    excerpt_context_after].join
                 end
-              "\tL#{line_number}, C#{character_number}\t#{excerpt}"
+              "\tL#{line_number}, C#{character_number}\t#{yomi}\t#{excerpt}"
             }
           section_body = section_lines.join("\n")
           section = [section_heading, section_body].join("\n")

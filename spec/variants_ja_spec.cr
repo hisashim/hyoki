@@ -146,8 +146,8 @@ describe "VariantsJa" do
         doc = VariantsJa::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
           イウ: 言う (1) | いう (1)
-          \tL1, C12\t、と警官は言った。
-          \tL2, C13\tあるのだという。
+          \tL1, C12\t言う\t、と警官は言った。
+          \tL2, C13\tいう\tあるのだという。
           EOS
       end
 
@@ -160,14 +160,14 @@ describe "VariantsJa" do
         doc.report_variants_text(context_before: 0, context_after: 0)
           .should eq <<-EOS.chomp
             イウ: 言う (1) | いう (1)
-            \tL1, C12\t言っ
-            \tL2, C13\tいう
+            \tL1, C12\t言う\t言っ
+            \tL2, C13\tいう\tいう
             EOS
         doc.report_variants_text(context_before: 3, context_after: 3)
           .should eq <<-EOS.chomp
             イウ: 言う (1) | いう (1)
-            \tL1, C12\t警官は言った。
-            \tL2, C13\tのだという。
+            \tL1, C12\t言う\t警官は言った。
+            \tL2, C13\tいう\tのだという。
             EOS
       end
 
@@ -179,8 +179,8 @@ describe "VariantsJa" do
         doc = VariantsJa::Document.new(input)
         doc.report_variants_text(color: true).should eq <<-EOS.chomp
           イウ: 言う (1) | いう (1)
-          \tL1, C12\t、と警官は\e[1;4;7m言っ\e[0mた。
-          \tL2, C13\tあるのだと\e[1;4;7mいう\e[0m。
+          \tL1, C12\t言う\t、と警官は\e[1;4;7m言っ\e[0mた。
+          \tL2, C13\tいう\tあるのだと\e[1;4;7mいう\e[0m。
           EOS
       end
 
@@ -195,11 +195,11 @@ describe "VariantsJa" do
         doc = VariantsJa::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
           シコウ: 志向 (1) | 思考 (1) | 指向 (1) | 施行 (1) | 試行 (1)
-          \tL1, C1\t志向
-          \tL2, C1\t思考
-          \tL3, C1\t指向
-          \tL4, C1\t施行
-          \tL5, C1\t試行
+          \tL1, C1\t志向\t志向
+          \tL2, C1\t思考\t思考
+          \tL3, C1\t指向\t指向
+          \tL4, C1\t施行\t施行
+          \tL5, C1\t試行\t試行
           EOS
       end
 
@@ -210,19 +210,19 @@ describe "VariantsJa" do
         doc = VariantsJa::Document.new(input)
         doc.report_variants_text(sort: :alphabetical).should eq <<-EOS.chomp
           イシ: 意思 (1) | 意志 (1)
-          \tL1, C7\t考と試行。意思と意志。
-          \tL1, C10\t行。意思と意志。
+          \tL1, C7\t意思\t考と試行。意思と意志。
+          \tL1, C10\t意志\t行。意思と意志。
           シコウ: 思考 (1) | 試行 (1)
-          \tL1, C1\t思考と試行。意
-          \tL1, C4\t思考と試行。意思と意
+          \tL1, C1\t思考\t思考と試行。意
+          \tL1, C4\t試行\t思考と試行。意思と意
           EOS
         doc.report_variants_text(sort: :appearance).should eq <<-EOS.chomp
           シコウ: 思考 (1) | 試行 (1)
-          \tL1, C1\t思考と試行。意
-          \tL1, C4\t思考と試行。意思と意
+          \tL1, C1\t思考\t思考と試行。意
+          \tL1, C4\t試行\t思考と試行。意思と意
           イシ: 意思 (1) | 意志 (1)
-          \tL1, C7\t考と試行。意思と意志。
-          \tL1, C10\t行。意思と意志。
+          \tL1, C7\t意思\t考と試行。意思と意志。
+          \tL1, C10\t意志\t行。意思と意志。
           EOS
       end
     end
@@ -272,8 +272,8 @@ describe "VariantsJa" do
         doc = VariantsJa::Document.new(input)
         doc.report_heteronyms_text.should eq <<-EOS.chomp
           方: カタ (1) | ホウ (1)
-          \tL1, C4\t区切り方がわかりま
-          \tL2, C3\tその方がいいでし
+          \tL1, C4\tカタ\t区切り方がわかりま
+          \tL2, C3\tホウ\tその方がいいでし
           EOS
       end
     end
