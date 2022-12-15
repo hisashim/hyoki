@@ -196,6 +196,26 @@ module VariantsJa
       end
     end
 
+    def excerpt(morpheme, context_before, context_after, color = nil)
+      line = morpheme.line
+      string_index = morpheme.string_index
+      prefix =
+        if (leftmost = string_index - context_before) && leftmost.negative?
+          line.body[0, string_index]
+        else
+          line.body[leftmost, context_before]
+        end
+      body = morpheme.surface
+      suffix = line.body[(string_index + body.size), context_after]
+
+      if color
+        # 1: Bold, 4: Underline, 7: Invert, 0: Reset
+        [prefix, "\e[1;4;7m", body, "\e[0m", suffix].join
+      else
+        [prefix, body, suffix].join
+      end
+    end
+
     def report_variants_text(context_before = 5, context_after = 5, sort = :alphabetical, color = false)
       variants = variants(@lines, @yomi_parser, sort)
 
@@ -214,26 +234,7 @@ module VariantsJa
               line_number = line.index + 1
               character_number = string_index + 1
               lexical_form = m.feature.lexical_form
-              excerpt_context_before =
-                if (leftmost = string_index - context_before) && leftmost.negative?
-                  line.body[0, string_index]
-                else
-                  line.body[leftmost, context_before]
-                end
-              excerpt_body = m.surface
-              excerpt_context_after =
-                line.body[(string_index + excerpt_body.size), context_after]
-              excerpt =
-                if color
-                  # 1: Bold, 4: Underline, 7: Invert, 0: Reset
-                  [excerpt_context_before,
-                   "\e[1;4;7m", excerpt_body, "\e[0m",
-                   excerpt_context_after].join
-                else
-                  [excerpt_context_before,
-                   excerpt_body,
-                   excerpt_context_after].join
-                end
+              excerpt = excerpt(m, context_before, context_after, color)
               "\tL#{line_number}, C#{character_number}\t#{lexical_form}\t#{excerpt}"
             }
           section_body = section_lines.join("\n")
@@ -256,17 +257,7 @@ module VariantsJa
             string_index = m.string_index
             line_number = line.index + 1
             character_number = string_index + 1
-            excerpt_context_before =
-              if (leftmost = string_index - context_before) && leftmost.negative?
-                line.body[0, string_index]
-              else
-                line.body[leftmost, context_before]
-              end
-            excerpt_body = m.surface
-            excerpt_context_after =
-              line.body[(string_index + excerpt_body.size), context_after]
-            excerpt =
-              [excerpt_context_before, excerpt_body, excerpt_context_after].join
+            excerpt = excerpt(m, context_before, context_after)
             a_line =
               [
                 lexical_form_yomi,
@@ -335,26 +326,7 @@ module VariantsJa
               line_number = line.index + 1
               character_number = string_index + 1
               yomi = m.feature.yomi
-              excerpt_context_before =
-                if (leftmost = string_index - context_before) && leftmost.negative?
-                  line.body[0, string_index]
-                else
-                  line.body[leftmost, context_before]
-                end
-              excerpt_body = m.surface
-              excerpt_context_after =
-                line.body[(string_index + excerpt_body.size), context_after]
-              excerpt =
-                if color
-                  # 1: Bold, 4: Underline, 7: Invert, 0: Reset
-                  [excerpt_context_before,
-                   "\e[1;4;7m", excerpt_body, "\e[0m",
-                   excerpt_context_after].join
-                else
-                  [excerpt_context_before,
-                   excerpt_body,
-                   excerpt_context_after].join
-                end
+              excerpt = excerpt(m, context_before, context_after, color)
               "\tL#{line_number}, C#{character_number}\t#{yomi}\t#{excerpt}"
             }
           section_body = section_lines.join("\n")
@@ -377,17 +349,7 @@ module VariantsJa
             string_index = m.string_index
             line_number = line.index + 1
             character_number = string_index + 1
-            excerpt_context_before =
-              if (leftmost = string_index - context_before) && leftmost.negative?
-                line.body[0, string_index]
-              else
-                line.body[leftmost, context_before]
-              end
-            excerpt_body = m.surface
-            excerpt_context_after =
-              line.body[(string_index + excerpt_body.size), context_after]
-            excerpt =
-              [excerpt_context_before, excerpt_body, excerpt_context_after].join
+            excerpt = excerpt(m, context_before, context_after)
             a_line =
               [
                 surface,
