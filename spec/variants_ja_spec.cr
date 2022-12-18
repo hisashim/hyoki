@@ -157,13 +157,13 @@ describe "VariantsJa" do
           そういうことがあるのだという。
           EOS
         doc = VariantsJa::Document.new(input)
-        doc.report_variants_text(context_before: 0, context_after: 0)
+        doc.report_variants_text(context: 0)
           .should eq <<-EOS.chomp
             イウ: 言う (1) | いう (1)
             \tL1, C12\t言う\t言っ
             \tL2, C13\tいう\tいう
             EOS
-        doc.report_variants_text(context_before: 3, context_after: 3)
+        doc.report_variants_text(context: {3, 3})
           .should eq <<-EOS.chomp
             イウ: 言う (1) | いう (1)
             \tL1, C12\t言う\t警官は言った。
