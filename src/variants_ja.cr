@@ -192,7 +192,7 @@ module VariantsJa
       case sort
       when :alphabetical
         variants.to_a.sort_by { |lexical_form_yomi, _morphemes_of_same_yomi|
-          lexical_form_yomi # sort sections by yomi of lexical form
+          lexical_form_yomi # sort items by yomi of lexical form
         }
       when :appearance
         variants.to_a
@@ -247,122 +247,72 @@ module VariantsJa
       end
     end
 
-    def report_variants_text(context = 5, sort = :alphabetical, color = false)
+    def report_text(category_to_relevant_morphemes, context, sort, color, &block)
       variants = variants(@lines, @yomi_parser, sort)
       report_items =
-        variants.map { |lexical_form_yomi, morphemes_of_same_yomi|
-          lexical_forms = morphemes_of_same_yomi.map { |m| m.feature.lexical_form }
+        category_to_relevant_morphemes.map { |category, relevant_morphemes|
+          subcategories = relevant_morphemes.map { |m| yield m }
           item_heading =
-            "#{lexical_form_yomi}: " + lexical_forms.tally.map { |item_name, count|
-              "#{item_name} (#{count})"
-            }.join(" | ")
-          item_lines =
-            morphemes_of_same_yomi.map { |m|
+            "#{category}: " +
+              subcategories.tally.map { |h, count| "#{h} (#{count})" }.join(" | ")
+          subitems =
+            relevant_morphemes.map { |m|
               line = m.line
               string_index = m.string_index
               line_number = line.index + 1
               character_number = string_index + 1
-              subitem = m.feature.lexical_form
+              subcategory = yield m
               excerpt = excerpt(m, context, color)
-              "\tL#{line_number}, C#{character_number}\t#{subitem}\t#{excerpt}"
+              "\tL#{line_number}, C#{character_number}\t#{subcategory}\t#{excerpt}"
             }
-          item_body = item_lines.join("\n")
-          [item_heading, item_body].join("\n")
+          [item_heading, subitems.join("\n")].join("\n")
         }
       report_items.join("\n")
     end
 
-    def report_variants_tsv(context = 5, sort = :alphabetical)
-      variants = variants(@lines, @yomi_parser, sort)
+    def report_tsv(category_to_relevant_morphemes, header, context, sort)
       report_lines =
-        variants.map { |lexical_form_yomi, morphemes_of_same_yomi|
-          morphemes_of_same_yomi.map { |m|
+        category_to_relevant_morphemes.map { |category, relevant_morphemes|
+          relevant_morphemes.map { |m|
             line = m.line
             string_index = m.string_index
-            category = lexical_form_yomi
             line_number = line.index + 1
             character_number = string_index + 1
-            subcategory = m.feature.lexical_form
+            subcategory = yield m
             excerpt = excerpt(m, context)
-            [
-              category,
-              line_number,
-              character_number,
-              subcategory,
-              m.surface,
-              excerpt,
-            ].map { |v| v.to_s.gsub(TSV_ESCAPE_REGEX, TSV_ESCAPE) }.join("\t")
+            [category, line_number, character_number, subcategory, m.surface, excerpt]
+              .map { |v| v.to_s.gsub(TSV_ESCAPE_REGEX, TSV_ESCAPE) }.join("\t")
           }
         }
-      report_header =
-        [
-          "lexical form yomi",
-          "line",
-          "character",
-          "lexical form",
-          "surface",
-          "excerpt",
-        ].join("\t")
-      [report_header, report_lines.flatten.join("\n")].join("\n")
+      [header, report_lines.flatten.join("\n")].join("\n")
+    end
+
+    def report_variants_text(context = 5, sort = :alphabetical, color = false)
+      report_text(variants(@lines, @yomi_parser, sort), context, sort, color) { |morpheme|
+        morpheme.feature.lexical_form
+      }
+    end
+
+    def report_variants_tsv(header = <<-EOS.chomp, context = 5, sort = :alphabetical)
+      lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
+      EOS
+      report_tsv(variants(@lines, @yomi_parser, sort), header, context, sort) { |morpheme|
+        morpheme.feature.lexical_form
+      }
     end
 
     def report_heteronyms_text(context = 5, sort = :alphabetical, color = false)
-      heteronyms = heteronyms(@lines, sort)
-      report_items =
-        heteronyms.map { |surface, morphemes_of_same_surface|
-          yomis = morphemes_of_same_surface.map { |m| m.feature.yomi }
-          item_heading =
-            "#{surface}: " + yomis.tally.map { |item_name, count|
-              "#{item_name} (#{count})"
-            }.join(" | ")
-          item_lines =
-            morphemes_of_same_surface.map { |m|
-              line = m.line
-              string_index = m.string_index
-              line_number = line.index + 1
-              character_number = string_index + 1
-              subitem = m.feature.yomi
-              excerpt = excerpt(m, context, color)
-              "\tL#{line_number}, C#{character_number}\t#{subitem}\t#{excerpt}"
-            }
-          item_body = item_lines.join("\n")
-          [item_heading, item_body].join("\n")
-        }
-      report_items.join("\n")
+      report_text(heteronyms(@lines, sort), context, sort, color) { |morpheme|
+        morpheme.feature.yomi
+      }
     end
 
-    def report_heteronyms_tsv(context = 5, sort = :alphabetical)
-      heteronyms = heteronyms(@lines, sort)
-      report_lines =
-        heteronyms.map { |surface, morphemes_of_same_surface|
-          morphemes_of_same_surface.map { |m|
-            line = m.line
-            string_index = m.string_index
-            category = surface
-            line_number = line.index + 1
-            character_number = string_index + 1
-            subcategory = m.feature.yomi
-            excerpt = excerpt(m, context)
-            [
-              category,
-              line_number,
-              character_number,
-              subcategory,
-              m.surface,
-              excerpt,
-            ].map { |v| v.to_s.gsub(TSV_ESCAPE_REGEX, TSV_ESCAPE) }.join("\t")
-          }
-        }
-      report_header =
-        [
-          "surface",
-          "line",
-          "character",
-          "yomi",
-          "surface",
-          "excerpt",
-        ].join("\t")
-      [report_header, report_lines.flatten.join("\n")].join("\n")
+    def report_heteronyms_tsv(header = <<-EOS.chomp, context = 5, sort = :alphabetical)
+      surface\tline\tcharacter\tyomi\tsurface\texcerpt
+      EOS
+      report_tsv(heteronyms(@lines, sort), header, context, sort) { |morpheme|
+        morpheme.feature.yomi
+      }
     end
   end
 
