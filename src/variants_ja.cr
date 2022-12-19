@@ -229,27 +229,33 @@ module VariantsJa
     end
 
     def excerpt(morpheme, context, color = nil)
-      line = morpheme.line
+      surface = morpheme.surface
       string_index = morpheme.string_index
+      line_body = morpheme.line.body
       context_length_before, context_length_after =
         case context
         in Int32               then {context, context}
         in Tuple(Int32, Int32) then context
         end
-      prefix =
-        if (leftmost = string_index - context_length_before) && leftmost.negative?
-          line.body[0, string_index]
-        else
-          line.body[leftmost, context_length_before]
-        end
-      body = morpheme.surface
-      suffix = line.body[(string_index + body.size), context_length_after]
+      leftmost = string_index - context_length_before
 
       if color
+        prefix =
+          if leftmost.negative?
+            line_body[0, string_index]
+          else
+            line_body[leftmost, context_length_before]
+          end
+        body = surface
+        suffix = line_body[(string_index + body.size), context_length_after]
         # 1: Bold, 4: Underline, 7: Invert, 0: Reset
-        [prefix, "\e[1;4;7m", body, "\e[0m", suffix].join
+        "#{prefix}\e[1;4;7m#{body}\e[0m#{suffix}"
       else
-        [prefix, body, suffix].join
+        if leftmost.negative?
+          line_body[0, (string_index + surface.size + context_length_after)]
+        else
+          line_body[leftmost, (context_length_before + surface.size + context_length_after)]
+        end
       end
     end
 
