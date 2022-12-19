@@ -180,43 +180,49 @@ module VariantsJa
 
     getter :lines
 
-    def variants(lines, yomi_parser, sort)
-      morphemes_by_yomi =
+    # Returns an associative list of yomi (of dictionary form) to
+    # variants: words with same pronunciation and different spelling.
+    def variants(lines, yomi_parser, sort) : Array(Tuple(String, Array(Morpheme)))
+      morphemes_by_lexical_form_yomi =
         lines.map { |l| l.morphemes }.flatten.group_by { |m|
+          # group morphemes by reading of dictionary form
           VariantsJa.yomi(m.feature.lexical_form, yomi_parser)
         }
-      variants =
-        morphemes_by_yomi.select { |_lexical_form_yomi, morphemes_of_same_yomi|
-          morphemes_of_same_yomi.map { |m| m.feature.lexical_form }.uniq.size >= 2
+      lexical_form_yomi_to_variants =
+        morphemes_by_lexical_form_yomi.select { |_lfyomi, morphemes_of_same_lfyomi|
+          morphemes_of_same_lfyomi.map { |m| m.feature.lexical_form }.uniq.size >= 2
         }
       case sort
       when :alphabetical
-        variants.to_a.sort_by { |lexical_form_yomi, _morphemes_of_same_yomi|
-          lexical_form_yomi # sort items by yomi of lexical form
+        lexical_form_yomi_to_variants.to_a.sort_by { |lfyomi, _morphemes_of_same_lfyomi|
+          lfyomi
         }
       when :appearance
-        variants.to_a
+        lexical_form_yomi_to_variants.to_a
       else
         raise "Invalid sort order: #{sort}"
       end
     end
 
-    def heteronyms(lines, sort)
+    # Returns an associative list of surface expression to heteronyms: words
+    # with same spelling and different pronunciation.
+    def heteronyms(lines, sort) : Array(Tuple(String, Array(Morpheme)))
       morphemes_by_surface =
         lines.map { |l| l.morphemes }.flatten.group_by { |m|
+          # group morphemes by surface expression
           m.surface
         }
-      heteronyms =
+      surface_to_heteronyms =
         morphemes_by_surface.select { |_surface, morphemes_of_same_surface|
           morphemes_of_same_surface.map { |m| m.feature.yomi }.uniq.size >= 2
         }
       case sort
       when :alphabetical
-        heteronyms.to_a.sort_by { |surface, _morphemes_of_same_surface|
+        surface_to_heteronyms.to_a.sort_by { |surface, _morphemes_of_same_surface|
           surface
         }
       when :appearance
-        heteronyms.to_a
+        surface_to_heteronyms.to_a
       else
         raise "Invalid sort order: #{sort}"
       end
@@ -289,7 +295,7 @@ module VariantsJa
 
     def report_variants_text(context = 5, sort = :alphabetical, color = false)
       report_text(variants(@lines, @yomi_parser, sort), context, sort, color) { |morpheme|
-        morpheme.feature.lexical_form
+        morpheme.feature.lexical_form # categorize subitems by dictionary form
       }
     end
 
@@ -297,13 +303,13 @@ module VariantsJa
       lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
       EOS
       report_tsv(variants(@lines, @yomi_parser, sort), header, context, sort) { |morpheme|
-        morpheme.feature.lexical_form
+        morpheme.feature.lexical_form # categorize subitems by dictionary form
       }
     end
 
     def report_heteronyms_text(context = 5, sort = :alphabetical, color = false)
       report_text(heteronyms(@lines, sort), context, sort, color) { |morpheme|
-        morpheme.feature.yomi
+        morpheme.feature.yomi # categorize subitems by yomi
       }
     end
 
@@ -311,7 +317,7 @@ module VariantsJa
       surface\tline\tcharacter\tyomi\tsurface\texcerpt
       EOS
       report_tsv(heteronyms(@lines, sort), header, context, sort) { |morpheme|
-        morpheme.feature.yomi
+        morpheme.feature.yomi # categorize subitems by yomi
       }
     end
   end
