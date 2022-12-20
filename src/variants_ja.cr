@@ -190,8 +190,14 @@ module VariantsJa
     def variants(lines, yomi_parser, sort) : Array(Tuple(String, Array(Morpheme)))
       morphemes_by_lexical_form_yomi =
         lines.map { |l| l.morphemes }.flatten.group_by { |m|
-          # group morphemes by reading of dictionary form
-          VariantsJa.yomi(m.feature.lexical_form, yomi_parser)
+          # group morphemes by yomi; use yomi of lexical form when surface
+          # differs from lexical form
+          lexical_form = m.feature.lexical_form
+          if m.surface == lexical_form
+            m.feature.yomi
+          else
+            VariantsJa.yomi(lexical_form, yomi_parser)
+          end
         }
       lexical_form_yomi_to_variants =
         morphemes_by_lexical_form_yomi.select { |_lfyomi, morphemes_of_same_lfyomi|

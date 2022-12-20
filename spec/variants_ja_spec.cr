@@ -225,6 +225,25 @@ describe "VariantsJa" do
           \tL1, C10\t意志\t行。意思と意志。
           EOS
       end
+
+      it "uses yomi of lexical form iff surface differs from lexical form" do
+        input = <<-EOS
+          区切り方のほう。区切りかたの方。
+          云う。言った。
+          EOS
+        doc = VariantsJa::Document.new(input)
+        doc.report_variants_text.should eq <<-EOS.chomp
+          イウ: 云う (1) | 言う (1)
+          \tL2, C1\t云う\t云う。言った。
+          \tL2, C4\t言う\t云う。言った。
+          カタ: 方 (1) | かた (1)
+          \tL1, C4\t方\t区切り方のほう。区
+          \tL1, C12\tかた\tう。区切りかたの方。
+          ホウ: ほう (1) | 方 (1)
+          \tL1, C6\tほう\t区切り方のほう。区切りか
+          \tL1, C15\t方\t切りかたの方。
+          EOS
+      end
     end
 
     describe "#report_variants_tsv" do
