@@ -211,7 +211,7 @@ module VariantsJa
       when :appearance
         lexical_form_yomi_to_variants.to_a
       else
-        raise "Invalid sort order: #{sort}"
+        raise "Invalid sort order: #{sort.inspect}"
       end
     end
 
@@ -235,7 +235,7 @@ module VariantsJa
       when :appearance
         surface_to_heteronyms.to_a
       else
-        raise "Invalid sort order: #{sort}"
+        raise "Invalid sort order: #{sort.inspect}"
       end
     end
 
@@ -388,7 +388,7 @@ module VariantsJa
             case s
             when "variants"   then :variants
             when "heteronyms" then :heteronyms
-            else                   raise "Invalid value for report type: #{s}"
+            else                   raise "Invalid report type: #{s.inspect}"
             end
         }
         o.on("--output-format=text|tsv", <<-EOS.chomp) { |s|
@@ -398,7 +398,7 @@ module VariantsJa
             case s
             when "text" then :text
             when "tsv"  then :tsv
-            else             raise "Invalid value for output format: #{s}"
+            else             raise "Invalid output format: #{s.inspect}"
             end
         }
         o.on("--color=auto|always|never", <<-EOS.chomp) { |s|
@@ -410,7 +410,7 @@ module VariantsJa
             when "auto"   then :auto
             when "always" then :always
             when "never"  then :never
-            else               raise "Invalid value for color: #{s}"
+            else               raise "Invalid value for color: #{s.inspect}"
             end
         }
         o.on("--context=N|N,M", <<-EOS.chomp) { |s|
@@ -435,7 +435,7 @@ module VariantsJa
             case s
             when "alphabetical" then :alphabetical
             when "appearance"   then :appearance
-            else                     raise "Invalid value for sort: #{s}"
+            else                     raise "Invalid value for sort: #{s.inspect}"
             end
         }
         o.on("--mecab-dict-dir=DIR", <<-EOS.chomp) { |s|
@@ -444,8 +444,8 @@ module VariantsJa
           EOS
           c.mecab_dict_dir =
             case
-            when !(Dir.exists? s)    then raise "Directory not found: #{s}"
-            when !(File.readable? s) then raise "Directory not readable: #{s}"
+            when !(Dir.exists? s)    then raise "Directory not found: #{s.inspect}"
+            when !(File.readable? s) then raise "Directory not readable: #{s.inspect}"
             else                          s
             end
         }
@@ -469,7 +469,7 @@ module VariantsJa
         when :auto   then STDOUT.tty?
         when :always then true
         when :never  then false
-        else              raise "Invalid tty option value: #{c.color}"
+        else              raise "Invalid value for color: #{c.color.inspect}"
         end
 
       doc = VariantsJa::Document.new(ARGF.gets_to_end, mecab_dict_dir: c.mecab_dict_dir)
