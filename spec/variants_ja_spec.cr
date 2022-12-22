@@ -244,6 +244,30 @@ describe "VariantsJa" do
           \tL1, C15\t方\t切りかたの方。
           EOS
       end
+
+      it "detects case variants of words in ASCII" do
+        input = <<-EOS
+          UNIXとUnix。
+          EOS
+        doc = VariantsJa::Document.new(input)
+        doc.report_variants_text.should eq <<-EOS.chomp
+          unix: UNIX (1) | Unix (1)
+          \tL1, C1\tUNIX\tUNIXとUnix
+          \tL1, C6\tUnix\tUNIXとUnix。
+          EOS
+      end
+
+      it "can not yet detect variants of ASCII words in general" do
+        input = <<-EOS
+          UNIXとUnix。Greyとgray。Colorとcolour。
+          EOS
+        doc = VariantsJa::Document.new(input)
+        doc.report_variants_text.should eq <<-EOS.chomp
+          unix: UNIX (1) | Unix (1)
+          \tL1, C1\tUNIX\tUNIXとUnix
+          \tL1, C6\tUnix\tUNIXとUnix。Grey
+          EOS
+      end
     end
 
     describe "#report_variants_tsv" do

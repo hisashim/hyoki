@@ -141,6 +141,8 @@ module VariantsJa
   class Document
     LINE_REGEX =
       /^(.*?)((?:\r\n|\r|\n)*)$/
+    ASCII_WORD_REGEX =
+      /\A[[:ascii:]]+\z/
     TSV_ESCAPE =
       {"\n" => "\\n", "\t" => "\\t", "\r" => "\\r", "\\" => "\\\\"}
     TSV_ESCAPE_REGEX =
@@ -190,18 +192,35 @@ module VariantsJa
     def variants(lines, yomi_parser, sort) : Array(Tuple(String, Array(Morpheme)))
       morphemes_by_lexical_form_yomi =
         lines.map { |l| l.morphemes }.flatten.group_by { |m|
-          # group morphemes by yomi; use yomi of lexical form when surface
-          # differs from lexical form
+          # Group morphemes by yomi.
+          #   * Use yomi of surface when surface and lexical form are the same.
+          #     Otherwise (when surface differs from lexical form), use
+          #     guessed yomi of lexical form.
+          #   * Kludge: For ASCII words, use downcased surface as a substitute
+          #     of yomi.
+          surface = m.surface
           lexical_form = m.feature.lexical_form
-          if m.surface == lexical_form
+          case
+          when surface == lexical_form
             m.feature.yomi
+          when ASCII_WORD_REGEX.match surface
+            surface.downcase
           else
             VariantsJa.yomi(lexical_form, yomi_parser)
           end
         }
       lexical_form_yomi_to_variants =
         morphemes_by_lexical_form_yomi.select { |_lfyomi, morphemes_of_same_lfyomi|
-          morphemes_of_same_lfyomi.map { |m| m.feature.lexical_form }.uniq.size >= 2
+          morphemes_of_same_lfyomi.map { |m|
+            surface = m.surface
+            if ASCII_WORD_REGEX.match surface
+              # Kludge: For ASCII words, use surface as a substitute of
+              # lexical form.
+              surface
+            else
+              m.feature.lexical_form
+            end
+          }.uniq.size >= 2
         }
       case sort
       when :alphabetical
@@ -314,7 +333,16 @@ module VariantsJa
 
     def report_variants_text(context = 5, sort = :alphabetical, color = false)
       report_text(variants(@lines, @yomi_parser, sort), context, color) { |morpheme|
-        morpheme.feature.lexical_form # categorize subitems by dictionary form
+        surface = morpheme.surface
+        if ASCII_WORD_REGEX.match surface
+          # Kludge: For ASCII words, categorize subitems by surface as a
+          # substitute of its dictionary form.
+          # TODO: Acquire dictionary forms of foreign words somehow.
+          surface
+        else
+          # In general, categorize subitems by dictionary form.
+          morpheme.feature.lexical_form
+        end
       }
     end
 
