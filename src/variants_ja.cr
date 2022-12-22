@@ -270,8 +270,7 @@ module VariantsJa
       end
     end
 
-    def report_text(category_to_relevant_morphemes, context, sort, color, &block)
-      variants = variants(@lines, @yomi_parser, sort)
+    def report_text(category_to_relevant_morphemes, context, color, &block)
       report_items =
         category_to_relevant_morphemes.map { |category, relevant_morphemes|
           subcategories = relevant_morphemes.map { |m| yield m }
@@ -293,7 +292,10 @@ module VariantsJa
       report_items.join("\n")
     end
 
-    def report_tsv(category_to_relevant_morphemes, header, context, sort)
+    def report_tsv(category_to_relevant_morphemes, context, color,
+                   header = <<-EOS.chomp, &block)
+        category\tline\tcharacter\tsubcategory\tsurface\texcerpt
+        EOS
       report_lines =
         category_to_relevant_morphemes.map { |category, relevant_morphemes|
           relevant_morphemes.map { |m|
@@ -302,7 +304,7 @@ module VariantsJa
             line_number = line.index + 1
             character_number = string_index + 1
             subcategory = yield m
-            excerpt = excerpt(m, context)
+            excerpt = excerpt(m, context, color)
             [category, line_number, character_number, subcategory, m.surface, excerpt]
               .map { |v| v.to_s.gsub(TSV_ESCAPE_REGEX, TSV_ESCAPE) }.join("\t")
           }
@@ -311,29 +313,29 @@ module VariantsJa
     end
 
     def report_variants_text(context = 5, sort = :alphabetical, color = false)
-      report_text(variants(@lines, @yomi_parser, sort), context, sort, color) { |morpheme|
+      report_text(variants(@lines, @yomi_parser, sort), context, color) { |morpheme|
         morpheme.feature.lexical_form # categorize subitems by dictionary form
       }
     end
 
-    def report_variants_tsv(header = <<-EOS.chomp, context = 5, sort = :alphabetical)
+    def report_variants_tsv(context = 5, sort = :alphabetical, color = false, header = <<-EOS.chomp)
       lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
       EOS
-      report_tsv(variants(@lines, @yomi_parser, sort), header, context, sort) { |morpheme|
+      report_tsv(variants(@lines, @yomi_parser, sort), context, color, header) { |morpheme|
         morpheme.feature.lexical_form # categorize subitems by dictionary form
       }
     end
 
     def report_heteronyms_text(context = 5, sort = :alphabetical, color = false)
-      report_text(heteronyms(@lines, sort), context, sort, color) { |morpheme|
+      report_text(heteronyms(@lines, sort), context, color) { |morpheme|
         morpheme.feature.yomi # categorize subitems by yomi
       }
     end
 
-    def report_heteronyms_tsv(header = <<-EOS.chomp, context = 5, sort = :alphabetical)
+    def report_heteronyms_tsv(context = 5, sort = :alphabetical, color = false, header = <<-EOS.chomp)
       surface\tline\tcharacter\tyomi\tsurface\texcerpt
       EOS
-      report_tsv(heteronyms(@lines, sort), header, context, sort) { |morpheme|
+      report_tsv(heteronyms(@lines, sort), context, color, header) { |morpheme|
         morpheme.feature.yomi # categorize subitems by yomi
       }
     end
@@ -402,8 +404,7 @@ module VariantsJa
             end
         }
         o.on("--color=auto|always|never", <<-EOS.chomp) { |s|
-          Enable/disable excerpt highlighting using ANSI escape sequence \
-          for text output (default: #{c.color})
+          Enable/disable excerpt highlighting (default: #{c.color})
           EOS
           c.color =
             case s
@@ -478,14 +479,14 @@ module VariantsJa
         case c.report_type
         when :variants
           case c.output_format
-          when :text then doc.report_variants_text(context: c.context, sort: c.sort, color: color)
-          when :tsv  then doc.report_variants_tsv(context: c.context, sort: c.sort)
+          when :text then doc.report_variants_text(c.context, c.sort, color)
+          when :tsv  then doc.report_variants_tsv(c.context, c.sort, color)
           else            raise "Invalid output format: #{c.output_format.inspect}"
           end
         when :heteronyms
           case c.output_format
-          when :text then doc.report_heteronyms_text(context: c.context, sort: c.sort, color: color)
-          when :tsv  then doc.report_heteronyms_tsv(context: c.context, sort: c.sort)
+          when :text then doc.report_heteronyms_text(c.context, c.sort, color)
+          when :tsv  then doc.report_heteronyms_tsv(c.context, c.sort, color)
           else            raise "Invalid output format: #{c.output_format.inspect}"
           end
         else

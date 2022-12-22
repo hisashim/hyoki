@@ -260,6 +260,19 @@ describe "VariantsJa" do
           EOS
       end
 
+      it "returns report with highlighting when color is true" do
+        input = <<-EOS
+          流れよわが涙、と警官は言った。
+          そういうことがあるのだという。
+          EOS
+        doc = VariantsJa::Document.new(input)
+        doc.report_variants_tsv(color: true).should eq <<-EOS.chomp
+          lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
+          イウ\t1\t12\t言う\t言っ\t、と警官は\e[1;4;7m言っ\e[0mた。
+          イウ\t2\t13\tいう\tいう\tあるのだと\e[1;4;7mいう\e[0m。
+          EOS
+      end
+
       it "returns report sorted when named arg sort is specified" do
         input = <<-EOS
           思考と試行。意思と意志。
