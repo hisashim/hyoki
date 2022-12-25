@@ -524,10 +524,4 @@ module VariantsJa
       puts_or_print report unless report.empty?
     end
   end
-
-  def self.called_as_an_application?
-    File.basename(__FILE__, ".cr") == File.basename(PROGRAM_NAME)
-  end
 end
-
-VariantsJa::CLI.run if VariantsJa.called_as_an_application?

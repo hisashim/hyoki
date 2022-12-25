@@ -6,7 +6,7 @@ authors:
 
 targets:
   variants_ja:
-    main: src/variants_ja.cr
+    main: src/main.cr
 
 development_dependencies:
   fucoidan:
