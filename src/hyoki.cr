@@ -18,8 +18,8 @@ module Hyoki
 
       def initialize(feature_csv)
         values = feature_csv.split(",")
-        # kludge: pad values to avoid IndexError
         if (size = values.size) < 9
+          # pad values to avoid IndexError
           (9 - size).times do
             values << "*"
           end
@@ -65,23 +65,22 @@ module Hyoki
     @string_index : Int32
 
     def initialize(node, index, max_index, source_string, line)
-      n = node
-      @surface = n.surface
-      @feature = Feature.new(n.feature)
-      @length = n.length
-      @rlength = n.rlength
-      @node_id = n.id
-      @rc_attr = n.rcAttr
-      @lc_attr = n.lcAttr
-      @posid = n.posid
-      @char_type = n.char_type
-      @stat = n.stat
-      @isbest = n.isbest
-      @alpha = n.alpha
-      @beta = n.beta
-      @prob = n.prob
-      @wcost = n.wcost
-      @cost = n.cost
+      @surface = node.surface
+      @feature = Feature.new(node.feature)
+      @length = node.length
+      @rlength = node.rlength
+      @node_id = node.id
+      @rc_attr = node.rcAttr
+      @lc_attr = node.lcAttr
+      @posid = node.posid
+      @char_type = node.char_type
+      @stat = node.stat
+      @isbest = node.isbest
+      @alpha = node.alpha
+      @beta = node.beta
+      @prob = node.prob
+      @wcost = node.wcost
+      @cost = node.cost
       @index = index
       @max_index = max_index
       @source_string = source_string
@@ -192,12 +191,13 @@ module Hyoki
     def variants(lines, yomi_parser, sort) : Array(Tuple(String, Array(Morpheme)))
       morphemes_by_lexical_form_yomi =
         lines.map { |l| l.morphemes }.flatten.group_by { |m|
-          # Group morphemes by yomi.
-          #   * Use yomi of surface when surface and lexical form are the same.
-          #     Otherwise (when surface differs from lexical form), use
-          #     guessed yomi of lexical form.
-          #   * Kludge: For ASCII words, use downcased surface as a substitute
-          #     of yomi.
+          # Group morphemes by yomi of lexical form.
+          #   * When surface and lexical form are the same, yomi of surface
+          #     can be used as yomi of lexical form.
+          #   * Otherwise (when surface differs from lexical form because of
+          #     conjugation and such), we try to guess yomi of lexical form.
+          #   * Kludge: For ASCII words, we use downcased surface as a
+          #     substitute of yomi.
           surface = m.surface
           lexical_form = m.feature.lexical_form
           case
@@ -404,10 +404,10 @@ module Hyoki
 
       op = OptionParser.new do |o|
         o.banner = <<-EOS
-          Help finding variants (hyoki-yure) in Japanese text
+          Help finding variants in Japanese text
 
           Usage:
-            #{PROGRAM_NAME} [OPTIONS] input.txt
+            #{PROGRAM_NAME} [OPTIONS] file
 
           Options:
           EOS
@@ -457,7 +457,7 @@ module Hyoki
             end
         }
         o.on("--sort=alphabetical|appearance", <<-EOS.chomp) { |s|
-          Specify how report items/records should be sorted \
+          Specify how report items should be sorted \
           (default: #{c.sort})
           EOS
           c.sort =
@@ -469,7 +469,7 @@ module Hyoki
         }
         o.on("--mecab-dict-dir=DIR", <<-EOS.chomp) { |s|
           Specify MeCab dictionary directory to use \
-          (e.g. /var/lib/mecab/dic/naist-jdic)
+          (e.g. /var/lib/mecab/dic/ipadic-utf8)
           EOS
           c.mecab_dict_dir =
             case
