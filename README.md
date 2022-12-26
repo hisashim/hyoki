@@ -1,6 +1,6 @@
-# VariantsJa
+# Hyoki
 
-VariantsJa helps authors and editors to find variants (hyoki-yure) in Japanese language text.
+Hyoki helps authors and editors to find variants (hyoki-yure) in Japanese language text.
 
 It shows words (morphemes) whose dictionary forms have the same yomi but have different representations, regardless of their meanings.
 
@@ -10,7 +10,7 @@ It shows words (morphemes) whose dictionary forms have the same yomi but have di
 $ sudo apt install crystal libmecab-dev
 $ make build
 $ sudo apt install mecab-ipadic-utf8
-$ cp bin/variants_ja ~/bin/
+$ cp bin/hyoki ~/bin/
 ```
 
 ### Requirements
@@ -30,13 +30,13 @@ $ cp bin/variants_ja ~/bin/
 ### Synopsis
 
 ```
-variants_ja [options] file
+hyoki [options] file
 ```
 
 ### Examples
 
 ```
-$ echo "公開した資料に誤りがあった。航海した死霊に謝りがあった。" | variants_ja
+$ echo "公開した資料に誤りがあった。航海した死霊に謝りがあった。" | hyoki
 コウカイ: 公開 (1) | 航海 (1)
         L1, C1  公開    公開した資料に
         L1, C15 航海    があった。航海した死霊に
@@ -47,7 +47,7 @@ $
 ```
 
 ```
-$ echo "人が云うには、彼がそう言ったのだという。" | variants_ja
+$ echo "人が云うには、彼がそう言ったのだという。" | hyoki
 イウ: 云う (1) | 言う (1) | いう (1)
         L1, C3  云う    人が云うには、彼が
         L1, C12 言う    、彼がそう言ったのだとい
@@ -56,7 +56,7 @@ $
 ```
 
 ```
-$ echo "その区切り方のほうがいい。\nその区切りかたの方がいい。" | variants_ja --report-type=variants
+$ echo "その区切り方のほうがいい。\nその区切りかたの方がいい。" | hyoki --report-type=variants
 カタ: 方 (1) | かた (1)
         L1, C6  方      その区切り方のほうがい
         L2, C6  かた    その区切りかたの方がいい
@@ -64,7 +64,7 @@ $ echo "その区切り方のほうがいい。\nその区切りかたの方が�
         L1, C8  ほう    区切り方のほうがいい。
         L2, C9  方      切りかたの方がいい。
 
-$ echo "その区切り方のほうがいい。\nその区切りかたの方がいい。" | variants_ja --report-type=heteronyms
+$ echo "その区切り方のほうがいい。\nその区切りかたの方がいい。" | hyoki --report-type=heteronyms
 方: カタ (1) | ホウ (1)
         L1, C6  カタ    その区切り方のほうがい
         L2, C9  ホウ    切りかたの方がいい。
@@ -73,7 +73,7 @@ $
 
 ### Options
 
-Type `variants_ja --help` to show command line options.
+Type `hyoki --help` to show command line options.
 
 ## Limitations and known problems
 

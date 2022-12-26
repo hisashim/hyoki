@@ -1,9 +1,9 @@
 require "./spec_helper"
 require "semantic_version"
 
-describe "VariantsJa" do
+describe "Hyoki" do
   it "has valid version" do
-    SemanticVersion.parse(VariantsJa::VERSION).is_a? SemanticVersion
+    SemanticVersion.parse(Hyoki::VERSION).is_a? SemanticVersion
   end
 
   describe "Morpheme" do
@@ -12,7 +12,7 @@ describe "VariantsJa" do
         input = <<-EOS
           私の名前は中野です。
           EOS
-        VariantsJa::Document.new(input).lines[0].morphemes.map { |m| m.surface }
+        Hyoki::Document.new(input).lines[0].morphemes.map { |m| m.surface }
           .should eq ["私", "の", "名前", "は", "中野", "です", "。"]
       end
     end
@@ -23,8 +23,8 @@ describe "VariantsJa" do
           L1
           L2
           EOS
-        VariantsJa::Document.new(input).lines[0].morphemes[0].line.index.should eq 0
-        VariantsJa::Document.new(input).lines[1].morphemes[0].line.index.should eq 1
+        Hyoki::Document.new(input).lines[0].morphemes[0].line.index.should eq 0
+        Hyoki::Document.new(input).lines[1].morphemes[0].line.index.should eq 1
       end
     end
 
@@ -34,10 +34,10 @@ describe "VariantsJa" do
           L1M1 L1M2
           L2M1 L2M2
           EOS
-        VariantsJa::Document.new(input).lines[0].morphemes[0].index.should eq 0
-        VariantsJa::Document.new(input).lines[0].morphemes[1].index.should eq 1
-        VariantsJa::Document.new(input).lines[1].morphemes[0].index.should eq 0
-        VariantsJa::Document.new(input).lines[1].morphemes[1].index.should eq 1
+        Hyoki::Document.new(input).lines[0].morphemes[0].index.should eq 0
+        Hyoki::Document.new(input).lines[0].morphemes[1].index.should eq 1
+        Hyoki::Document.new(input).lines[1].morphemes[0].index.should eq 0
+        Hyoki::Document.new(input).lines[1].morphemes[1].index.should eq 1
       end
     end
 
@@ -46,7 +46,7 @@ describe "VariantsJa" do
         input = <<-EOS
           する・しない・する・しない・する・しない
           EOS
-        line = VariantsJa::Document.new(input).lines[0]
+        line = Hyoki::Document.new(input).lines[0]
         morphemes = line.morphemes
         m0 = morphemes[0]
         m0.surface.should eq "する"
@@ -60,7 +60,7 @@ describe "VariantsJa" do
           する・しない・する・しない・する・しない
           そういうことが あるのだという。
           EOS
-        lines = VariantsJa::Document.new(input).lines
+        lines = Hyoki::Document.new(input).lines
         lines[0].morphemes[0].string_index.should eq 0
         lines[0].morphemes[5].string_index.should eq 7
         lines[0].morphemes[10].string_index.should eq 14
@@ -70,7 +70,7 @@ describe "VariantsJa" do
         # this input consists of 1000 morphemes, and morphemes[0]
         # starts at input[1] because of the preceding space
         input = " " + ("0あ1い2う3え4お5か6き7く8け9こ" * 50)
-        lines = VariantsJa::Document.new(input).lines
+        lines = Hyoki::Document.new(input).lines
         lines[0].morphemes[0].string_index.should eq 1
         lines[0].morphemes[100].string_index.should eq 101
         lines[0].morphemes[990].string_index.should eq 991
@@ -79,7 +79,7 @@ describe "VariantsJa" do
       it "handles empty input without problems" do
         input = <<-EOS.chomp
           EOS
-        VariantsJa::Document.new(input).lines.each { |l|
+        Hyoki::Document.new(input).lines.each { |l|
           l.morphemes.each { |m|
             substring_start = m.string_index
             substring_length = m.surface.size
@@ -96,7 +96,7 @@ describe "VariantsJa" do
           input = <<-EOS
             思考と試行。
             EOS
-          morphemes = VariantsJa::Document.new(input).lines[0].morphemes
+          morphemes = Hyoki::Document.new(input).lines[0].morphemes
           morphemes[0].feature.yomi.should eq "シコウ"
           morphemes[2].feature.yomi.should eq "シコウ"
         end
@@ -107,7 +107,7 @@ describe "VariantsJa" do
           input = <<-EOS
             わかりません。
             EOS
-          morphemes = VariantsJa::Document.new(input).lines[0].morphemes
+          morphemes = Hyoki::Document.new(input).lines[0].morphemes
           morphemes[0].feature.lexical_form.should eq "わかる"
           morphemes[1].feature.lexical_form.should eq "ます"
         end
@@ -122,8 +122,8 @@ describe "VariantsJa" do
           わかりません。
           EOS
         parser = Fucoidan::Fucoidan.new
-        line = VariantsJa::Document::Line.new(input, 0, parser)
-        morphemes = VariantsJa.string_to_morphemes(input, line, parser)
+        line = Hyoki::Document::Line.new(input, 0, parser)
+        morphemes = Hyoki.string_to_morphemes(input, line, parser)
         morphemes.map { |m| m.surface }.should eq ["わかり", "ませ", "ん", "。"]
       end
     end
@@ -133,7 +133,7 @@ describe "VariantsJa" do
         input = <<-EOS
           日本語
           EOS
-        VariantsJa.yomi(input, Fucoidan::Fucoidan.new("-Oyomi")).should eq "ニホンゴ"
+        Hyoki.yomi(input, Fucoidan::Fucoidan.new("-Oyomi")).should eq "ニホンゴ"
       end
     end
 
@@ -143,7 +143,7 @@ describe "VariantsJa" do
           流れよわが涙、と警官は言った。
           そういうことがあるのだという。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
           イウ: 言う (1) | いう (1)
           \tL1, C12\t言う\t、と警官は言った。
@@ -156,7 +156,7 @@ describe "VariantsJa" do
           流れよわが涙、と警官は言った。
           そういうことがあるのだという。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_variants_text(context: 0)
           .should eq <<-EOS.chomp
             イウ: 言う (1) | いう (1)
@@ -176,7 +176,7 @@ describe "VariantsJa" do
           流れよわが涙、と警官は言った。
           そういうことがあるのだという。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_variants_text(color: true).should eq <<-EOS.chomp
           イウ: 言う (1) | いう (1)
           \tL1, C12\t言う\t、と警官は\e[1;4;7m言っ\e[0mた。
@@ -192,7 +192,7 @@ describe "VariantsJa" do
           施行
           試行
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
           シコウ: 志向 (1) | 思考 (1) | 指向 (1) | 施行 (1) | 試行 (1)
           \tL1, C1\t志向\t志向
@@ -207,7 +207,7 @@ describe "VariantsJa" do
         input = <<-EOS
           思考と試行。意思と意志。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_variants_text(sort: :alphabetical).should eq <<-EOS.chomp
           イシ: 意思 (1) | 意志 (1)
           \tL1, C7\t意思\t考と試行。意思と意志。
@@ -231,7 +231,7 @@ describe "VariantsJa" do
           区切り方のほう。区切りかたの方。
           云う。言った。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
           イウ: 云う (1) | 言う (1)
           \tL2, C1\t云う\t云う。言った。
@@ -249,7 +249,7 @@ describe "VariantsJa" do
         input = <<-EOS
           UNIXとUnix。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
           unix: UNIX (1) | Unix (1)
           \tL1, C1\tUNIX\tUNIXとUnix
@@ -261,7 +261,7 @@ describe "VariantsJa" do
         input = <<-EOS
           UNIXとUnix。Greyとgray。Colorとcolour。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
           unix: UNIX (1) | Unix (1)
           \tL1, C1\tUNIX\tUNIXとUnix
@@ -276,7 +276,7 @@ describe "VariantsJa" do
           流れよわが涙、と警官は言った。
           そういうことがあるのだという。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_variants_tsv.should eq <<-EOS.chomp
           lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
           イウ\t1\t12\t言う\t言っ\t、と警官は言った。
@@ -289,7 +289,7 @@ describe "VariantsJa" do
           流れよわが涙、と警官は言った。
           そういうことがあるのだという。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_variants_tsv(color: true).should eq <<-EOS.chomp
           lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
           イウ\t1\t12\t言う\t言っ\t、と警官は\e[1;4;7m言っ\e[0mた。
@@ -301,7 +301,7 @@ describe "VariantsJa" do
         input = <<-EOS
           思考と試行。意思と意志。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_variants_tsv(sort: :alphabetical).should eq <<-EOS.chomp
           lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
           イシ\t1\t7\t意思\t意思\t考と試行。意思と意志。
@@ -325,7 +325,7 @@ describe "VariantsJa" do
           区切り方がわかりません。区切りかたがわかりません。
           その方がいいでしょう。そのほうがいいでしょう。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_heteronyms_text.should eq <<-EOS.chomp
           方: カタ (1) | ホウ (1)
           \tL1, C4\tカタ\t区切り方がわかりま
@@ -340,7 +340,7 @@ describe "VariantsJa" do
           区切り方がわかりません。区切りかたがわかりません。
           その方がいいでしょう。そのほうがいいでしょう。
           EOS
-        doc = VariantsJa::Document.new(input)
+        doc = Hyoki::Document.new(input)
         doc.report_heteronyms_tsv.should eq <<-EOS.chomp
           surface\tline\tcharacter\tyomi\tsurface\texcerpt
           方\t1\t4\tカタ\t方\t区切り方がわかりま

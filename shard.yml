@@ -1,11 +1,11 @@
-name: variants_ja
+name: hyoki
 version: 0.1.0
 
 authors:
   - Hisashi Morita
 
 targets:
-  variants_ja:
+  hyoki:
     main: src/main.cr
 
 development_dependencies:

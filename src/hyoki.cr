@@ -1,7 +1,7 @@
 require "fucoidan"
 require "option_parser"
 
-module VariantsJa
+module Hyoki
   VERSION = "0.1.0"
 
   class Morpheme
@@ -169,7 +169,7 @@ module VariantsJa
       getter :body, :eol, :index
 
       def morphemes
-        @morphemes ||= VariantsJa.string_to_morphemes(body, self, @parser)
+        @morphemes ||= Hyoki.string_to_morphemes(body, self, @parser)
       end
     end
 
@@ -206,7 +206,7 @@ module VariantsJa
           when ASCII_WORD_REGEX.match surface
             surface.downcase
           else
-            VariantsJa.yomi(lexical_form, yomi_parser)
+            Hyoki.yomi(lexical_form, yomi_parser)
           end
         }
       lexical_form_yomi_to_variants =
@@ -489,7 +489,7 @@ module VariantsJa
       end
 
       if c.show_version
-        puts_or_print VariantsJa::VERSION
+        puts_or_print Hyoki::VERSION
         exit 0
       end
 
@@ -501,7 +501,7 @@ module VariantsJa
         else              raise "Invalid value for color: #{c.color.inspect}"
         end
 
-      doc = VariantsJa::Document.new(ARGF.gets_to_end, mecab_dict_dir: c.mecab_dict_dir)
+      doc = Hyoki::Document.new(ARGF.gets_to_end, mecab_dict_dir: c.mecab_dict_dir)
 
       report =
         case c.report_type

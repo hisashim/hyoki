@@ -1,3 +1,3 @@
-require "./variants_ja"
+require "./hyoki"
 
-VariantsJa::CLI.run
+Hyoki::CLI.run
