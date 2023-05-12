@@ -116,6 +116,17 @@ describe "Hyoki" do
   end
 
   describe "Document" do
+    describe "#lines" do
+      it "returns lines" do
+        input = <<-EOS
+          L1
+          L2
+          EOS
+        lines = Hyoki::Document.new(input).lines
+        lines.map { |l| [l.body, l.eol] }.should eq [["L1", "\n"], ["L2", nil]]
+      end
+    end
+
     describe "#string_to_morphemes" do
       it "converts string to morphemes" do
         input = <<-EOS

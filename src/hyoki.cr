@@ -139,7 +139,7 @@ module Hyoki
 
   class Document
     LINE_REGEX =
-      /^(.*?)((?:\r\n|\r|\n)*)$/
+      /([^\r\n]*?)(\r\n|\r|\n)|(.+)/
     ASCII_WORD_REGEX =
       /\A[[:ascii:]]+\z/
     TSV_ESCAPE =
@@ -150,13 +150,23 @@ module Hyoki
     struct Line
       @source : String
       @body : String
-      @eol : String
+      @eol : String | Nil
       @index : Int32
       @morphemes : Array(Morpheme) | Nil
       @parser : Fucoidan::Fucoidan
 
       def initialize(source, index, parser)
-        body, eol = source.scan(LINE_REGEX).first
+        mds = source.scan(LINE_REGEX)
+        raise <<-EOS if mds.size != 1
+          LINE_REGEX failed to produce just 1 match (#{mds.inspect})
+          EOS
+        md = mds.first
+        body, eol =
+          case
+          when md[3]? then {md[3], nil}
+          when md[1]? then {md[1], md[2]}
+          else             {md[1], md[2]}
+          end
         @source = source
         @body = body
         @eol = eol
@@ -181,7 +191,9 @@ module Hyoki
       mecab_opts << "--dicdir=#{mecab_dict_dir}" if mecab_dict_dir
       @parser = Fucoidan::Fucoidan.new(mecab_opts.join(" "))
       @yomi_parser = Fucoidan::Fucoidan.new((mecab_opts + ["-Oyomi"]).join(" "))
-      @lines = string.lines.map_with_index { |str, i| Line.new(str, i, @parser) }
+      @lines = string.scan(/(?:[^\r\n]*?)(?:\r\n|\r|\n)|(?:.+)/m).map { |md|
+        md[0]
+      }.map_with_index { |str, i| Line.new(str, i, @parser) }
     end
 
     getter :lines
