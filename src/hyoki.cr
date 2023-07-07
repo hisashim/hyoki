@@ -148,15 +148,16 @@ module Hyoki
       Regex.new(TSV_ESCAPE.keys.map { |k| "(?:#{Regex.escape(k)})" }.join("|"))
 
     struct Line
-      @source : String
+      @source_string : String
       @body : String
       @eol : String | Nil
       @index : Int32
       @morphemes : Array(Morpheme) | Nil
       @parser : Fucoidan::Fucoidan
+      @source_name : String | Nil
 
-      def initialize(source, index, parser)
-        mds = source.scan(LINE_REGEX)
+      def initialize(source_string, index, parser, source_io = nil)
+        mds = source_string.scan(LINE_REGEX)
         raise <<-EOS if mds.size != 1
           LINE_REGEX failed to produce just 1 match (#{mds.inspect})
           EOS
@@ -167,15 +168,21 @@ module Hyoki
           when md[1]? then {md[1], md[2]}
           else             {md[1], md[2]}
           end
-        @source = source
+        @source_string = source_string
         @body = body
         @eol = eol
         @index = index
         @morphemes = nil
         @parser = parser
+        @source_name =
+          if source_io.responds_to?(:path)
+            source_io.path
+          else
+            nil
+          end
       end
 
-      getter :body, :eol, :index
+      getter :body, :eol, :index, :source_name
 
       def morphemes
         @morphemes ||= Hyoki.string_to_morphemes(body, self, @parser)
@@ -186,14 +193,25 @@ module Hyoki
     @parser : Fucoidan::Fucoidan
     @yomi_parser : Fucoidan::Fucoidan
 
-    def initialize(string, mecab_dict_dir = nil)
+    def initialize(source_ios : Array(IO), mecab_dict_dir = nil)
       mecab_opts = [] of String
       mecab_opts << "--dicdir=#{mecab_dict_dir}" if mecab_dict_dir
       @parser = Fucoidan::Fucoidan.new(mecab_opts.join(" "))
       @yomi_parser = Fucoidan::Fucoidan.new((mecab_opts + ["-Oyomi"]).join(" "))
-      @lines = string.scan(/(?:[^\r\n]*?)(?:\r\n|\r|\n)|(?:.+)/m).map { |md|
-        md[0]
-      }.map_with_index { |str, i| Line.new(str, i, @parser) }
+      @lines =
+        source_ios.reduce([] of Line) { |lines, source_io|
+          current_source_lines =
+            source_io.gets_to_end.scan(LINE_REGEX).map { |md|
+              md[0]
+            }.map_with_index { |str, i|
+              Line.new(str, i, @parser, source_io: source_io)
+            }
+          lines.concat(current_source_lines)
+        }
+    end
+
+    def initialize(string : String, mecab_dict_dir = nil)
+      initialize([IO::Memory.new(string)], mecab_dict_dir)
     end
 
     getter :lines
@@ -310,13 +328,15 @@ module Hyoki
               subcategories.tally.map { |h, count| "#{h} (#{count})" }.join(" | ")
           subitems =
             relevant_morphemes.map { |m|
-              line = m.line
-              string_index = m.string_index
-              line_number = line.index + 1
-              character_number = string_index + 1
+              source_name = m.line.source_name
+              line_number = m.line.index + 1
+              character_number = m.string_index + 1
               subcategory = yield m
               excerpt = excerpt(m, context, color)
-              "\tL#{line_number}, C#{character_number}\t#{subcategory}\t#{excerpt}"
+              "\t" + [source_name,
+                      "L#{line_number}, C#{character_number}",
+                      subcategory,
+                      excerpt].compact.join("\t")
             }
           [item_heading, subitems.join("\n")].join("\n")
         }
@@ -330,13 +350,12 @@ module Hyoki
       report_lines =
         category_to_relevant_morphemes.map { |category, relevant_morphemes|
           relevant_morphemes.map { |m|
-            line = m.line
-            string_index = m.string_index
-            line_number = line.index + 1
-            character_number = string_index + 1
+            source_name = m.line.source_name
+            line_number = m.line.index + 1
+            character_number = m.string_index + 1
             subcategory = yield m
             excerpt = excerpt(m, context, color)
-            [category, line_number, character_number, subcategory, m.surface, excerpt]
+            [category, source_name, line_number, character_number, subcategory, m.surface, excerpt]
               .map { |v| v.to_s.gsub(TSV_ESCAPE_REGEX, TSV_ESCAPE) }.join("\t")
           }
         }
@@ -359,7 +378,7 @@ module Hyoki
     end
 
     def report_variants_tsv(context = 5, sort = :alphabetical, color = false, header = <<-EOS.chomp)
-      lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
+      lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
       EOS
       report_tsv(variants(@lines, @yomi_parser, sort), context, color, header) { |morpheme|
         morpheme.feature.lexical_form # categorize subitems by dictionary form
@@ -373,7 +392,7 @@ module Hyoki
     end
 
     def report_heteronyms_tsv(context = 5, sort = :alphabetical, color = false, header = <<-EOS.chomp)
-      surface\tline\tcharacter\tyomi\tsurface\texcerpt
+      surface\tsource\tline\tcharacter\tyomi\tsurface\texcerpt
       EOS
       report_tsv(heteronyms(@lines, sort), context, color, header) { |morpheme|
         morpheme.feature.yomi # categorize subitems by yomi
@@ -419,7 +438,7 @@ module Hyoki
           Help finding variants in Japanese text
 
           Usage:
-            #{PROGRAM_NAME} [OPTIONS] file
+            #{PROGRAM_NAME} [OPTION]... [FILE]...
 
           Options:
           EOS
@@ -513,7 +532,14 @@ module Hyoki
         else              raise "Invalid value for color: #{c.color.inspect}"
         end
 
-      doc = Hyoki::Document.new(ARGF.gets_to_end, mecab_dict_dir: c.mecab_dict_dir)
+      sources =
+        if ARGV.empty?
+          [ARGF]
+        else
+          ARGV.map { |a| File.open(a) }
+        end
+
+      doc = Hyoki::Document.new(sources, mecab_dict_dir: c.mecab_dict_dir)
 
       report =
         case c.report_type

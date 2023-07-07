@@ -116,6 +116,31 @@ describe "Hyoki" do
   end
 
   describe "Document" do
+    describe ".new" do
+      it "receives Array(IO) as its sources" do
+        input = [IO::Memory.new("S1\n"), IO::Memory.new("S2")]
+        lines = Hyoki::Document.new(input).lines
+        lines.map { |l| [l.body, l.eol] }.should eq [["S1", "\n"], ["S2", nil]]
+      end
+
+      it "receives Array(File) as its sources" do
+        tempfiles = [
+          File.tempfile("f1", ".txt") { |f| f.print("F1\n") },
+          File.tempfile("f2", ".txt") { |f| f.print("F2") },
+        ]
+        input = tempfiles.map { |f| File.open(f.path) }
+        lines = Hyoki::Document.new(input).lines
+        tempfiles.map &.delete
+        lines.map { |l| [l.body, l.eol] }.should eq [["F1", "\n"], ["F2", nil]]
+      end
+
+      it "receives String as its source" do
+        input = "Lipsum.\n"
+        lines = Hyoki::Document.new(input).lines
+        lines.map { |l| [l.body, l.eol] }.should eq [["Lipsum.", "\n"]]
+      end
+    end
+
     describe "#lines" do
       it "returns lines" do
         input = <<-EOS
@@ -279,6 +304,43 @@ describe "Hyoki" do
           \tL1, C6\tUnix\tUNIXとUnix。Grey
           EOS
       end
+
+      context "input is from multiple files" do
+        it "shows corresponding source file names" do
+          sources = <<-EOS.lines(chomp: false)
+            流れよわが涙、と警官は言った。
+            そういうことがあるのだという。
+            言われてみればそのとおりだ。
+            EOS
+          files = sources.map { |s| File.tempfile { |f| f.print(s) } }
+            .map { |f| File.open(f.path) }
+          doc = Hyoki::Document.new(files)
+          doc.report_variants_text.should eq <<-EOS.chomp
+            イウ: 言う (2) | いう (1)
+            \t#{files[0].path}\tL1, C12\t言う\t、と警官は言った。
+            \t#{files[1].path}\tL1, C13\tいう\tあるのだという。
+            \t#{files[2].path}\tL1, C1\t言う\t言われてみれば
+            EOS
+          files.each &.delete
+        end
+      end
+
+      context "input is from non-file stream (e.g. ARGF, STDIN)" do
+        it "omits source file names" do
+          input = <<-EOS
+            流れよわが涙、と警官は言った。
+            そういうことがあるのだという。
+            言われてみればそのとおりだ。
+            EOS
+          doc = Hyoki::Document.new(input)
+          doc.report_variants_text.should eq <<-EOS.chomp
+            イウ: 言う (2) | いう (1)
+            \tL1, C12\t言う\t、と警官は言った。
+            \tL2, C13\tいう\tあるのだという。
+            \tL3, C1\t言う\t言われてみれば
+            EOS
+        end
+      end
     end
 
     describe "#report_variants_tsv" do
@@ -289,9 +351,9 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_variants_tsv.should eq <<-EOS.chomp
-          lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
-          イウ\t1\t12\t言う\t言っ\t、と警官は言った。
-          イウ\t2\t13\tいう\tいう\tあるのだという。
+          lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+          イウ\t\t1\t12\t言う\t言っ\t、と警官は言った。
+          イウ\t\t2\t13\tいう\tいう\tあるのだという。
           EOS
       end
 
@@ -302,9 +364,9 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_variants_tsv(color: true).should eq <<-EOS.chomp
-          lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
-          イウ\t1\t12\t言う\t言っ\t、と警官は\e[1;4;7m言っ\e[0mた。
-          イウ\t2\t13\tいう\tいう\tあるのだと\e[1;4;7mいう\e[0m。
+          lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+          イウ\t\t1\t12\t言う\t言っ\t、と警官は\e[1;4;7m言っ\e[0mた。
+          イウ\t\t2\t13\tいう\tいう\tあるのだと\e[1;4;7mいう\e[0m。
           EOS
       end
 
@@ -314,18 +376,18 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_variants_tsv(sort: :alphabetical).should eq <<-EOS.chomp
-          lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
-          イシ\t1\t7\t意思\t意思\t考と試行。意思と意志。
-          イシ\t1\t10\t意志\t意志\t行。意思と意志。
-          シコウ\t1\t1\t思考\t思考\t思考と試行。意
-          シコウ\t1\t4\t試行\t試行\t思考と試行。意思と意
+          lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+          イシ\t\t1\t7\t意思\t意思\t考と試行。意思と意志。
+          イシ\t\t1\t10\t意志\t意志\t行。意思と意志。
+          シコウ\t\t1\t1\t思考\t思考\t思考と試行。意
+          シコウ\t\t1\t4\t試行\t試行\t思考と試行。意思と意
           EOS
         doc.report_variants_tsv(sort: :appearance).should eq <<-EOS.chomp
-          lexical form yomi\tline\tcharacter\tlexical form\tsurface\texcerpt
-          シコウ\t1\t1\t思考\t思考\t思考と試行。意
-          シコウ\t1\t4\t試行\t試行\t思考と試行。意思と意
-          イシ\t1\t7\t意思\t意思\t考と試行。意思と意志。
-          イシ\t1\t10\t意志\t意志\t行。意思と意志。
+          lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+          シコウ\t\t1\t1\t思考\t思考\t思考と試行。意
+          シコウ\t\t1\t4\t試行\t試行\t思考と試行。意思と意
+          イシ\t\t1\t7\t意思\t意思\t考と試行。意思と意志。
+          イシ\t\t1\t10\t意志\t意志\t行。意思と意志。
           EOS
       end
     end
@@ -353,9 +415,9 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_heteronyms_tsv.should eq <<-EOS.chomp
-          surface\tline\tcharacter\tyomi\tsurface\texcerpt
-          方\t1\t4\tカタ\t方\t区切り方がわかりま
-          方\t2\t3\tホウ\t方\tその方がいいでし
+          surface\tsource\tline\tcharacter\tyomi\tsurface\texcerpt
+          方\t\t1\t4\tカタ\t方\t区切り方がわかりま
+          方\t\t2\t3\tホウ\t方\tその方がいいでし
           EOS
       end
     end

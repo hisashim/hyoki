@@ -9,7 +9,7 @@ It shows words (morphemes) whose dictionary forms have the same yomi but have di
 ### Synopsis
 
 ```
-hyoki [options] file
+hyoki [OPTION]... [FILE]...
 ```
 
 ### Examples
@@ -17,40 +17,53 @@ hyoki [options] file
 ```
 $ echo "暖かい部屋で温かい食事をとる。" | hyoki
 アタタカイ: 暖かい (1) | 温かい (1)
-        L1, C1  暖かい  暖かい部屋で温か
-        L1, C7  温かい  かい部屋で温かい食事をとる
+        -       L1, C1  暖かい  暖かい部屋で温か
+        -       L1, C7  温かい  かい部屋で温かい食事をとる
 $
 ```
 
 ```
 $ echo "人が云うには、彼がそう言ったのだという。" | hyoki
 イウ: 云う (1) | 言う (1) | いう (1)
-        L1, C3  云う    人が云うには、彼が
-        L1, C12 言う    、彼がそう言ったのだとい
-        L1, C18 いう    ったのだという。
+        -       L1, C3  云う    人が云うには、彼が
+        -       L1, C12 言う    、彼がそう言ったのだとい
+        -       L1, C18 いう    ったのだという。
 $
 ```
 
 ```
 $ echo "行う（本則）・行なう（許容）" | hyoki
 オコナウ: 行う (1) | 行なう (1)
-        L1, C1  行う    行う（本則）・
-        L1, C8  行なう  （本則）・行なう（許容）
+        -       L1, C1  行う    行う（本則）・
+        -       L1, C8  行なう  （本則）・行なう（許容）
 $
 ```
 
 ```
 $ echo "その区切り方のほうがいい。\nその区切りかたの方がいい。" | hyoki --report-type=variants
 カタ: 方 (1) | かた (1)
-        L1, C6  方      その区切り方のほうがい
-        L2, C6  かた    その区切りかたの方がいい
+        -       L1, C6  方      その区切り方のほうがい
+        -       L2, C6  かた    その区切りかたの方がいい
 ホウ: ほう (1) | 方 (1)
-        L1, C8  ほう    区切り方のほうがいい。
-        L2, C9  方      切りかたの方がいい。
+        -       L1, C8  ほう    区切り方のほうがいい。
+        -       L2, C9  方      切りかたの方がいい。
 $ echo "その区切り方のほうがいい。\nその区切りかたの方がいい。" | hyoki --report-type=heteronyms
 方: カタ (1) | ホウ (1)
-        L1, C6  カタ    その区切り方のほうがい
-        L2, C9  ホウ    切りかたの方がいい。
+        -       L1, C6  カタ    その区切り方のほうがい
+        -       L2, C9  ホウ    切りかたの方がいい。
+$
+```
+
+```
+$ echo "その区切り方のほうがいい。" > a.txt
+$ echo "その区切りかたの方がいい。" > b.txt
+$ hyoki a.txt b.txt
+カタ: 方 (1) | かた (1)
+        a.txt   L1, C6  方      その区切り方のほうがい
+        b.txt   L1, C6  かた    その区切りかたの方がいい
+ホウ: ほう (1) | 方 (1)
+        a.txt   L1, C8  ほう    区切り方のほうがいい。
+        b.txt   L1, C9  方      切りかたの方がいい。
 $
 ```
 
@@ -64,7 +77,7 @@ Help message as of version 0.1.0:
 Help finding variants in Japanese text
 
 Usage:
-  hyoki [OPTIONS] file
+  hyoki [OPTION]... [FILE]...
 
 Options:
     --report-type=variants|heteronyms
