@@ -181,9 +181,9 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
-          イウ: 言う (1) | いう (1)
-          \tL1, C12\t言う\t、と警官は言った。
-          \tL2, C13\tいう\tあるのだという。
+          ## イウ: 言う (1) | いう (1)
+              L1, C12\t言う\t、と警官は言った。
+              L2, C13\tいう\tあるのだという。
           EOS
       end
 
@@ -195,15 +195,15 @@ describe "Hyoki" do
         doc = Hyoki::Document.new(input)
         doc.report_variants_text(context: 0)
           .should eq <<-EOS.chomp
-            イウ: 言う (1) | いう (1)
-            \tL1, C12\t言う\t言っ
-            \tL2, C13\tいう\tいう
+            ## イウ: 言う (1) | いう (1)
+                L1, C12\t言う\t言っ
+                L2, C13\tいう\tいう
             EOS
         doc.report_variants_text(context: {3, 3})
           .should eq <<-EOS.chomp
-            イウ: 言う (1) | いう (1)
-            \tL1, C12\t言う\t警官は言った。
-            \tL2, C13\tいう\tのだという。
+            ## イウ: 言う (1) | いう (1)
+                L1, C12\t言う\t警官は言った。
+                L2, C13\tいう\tのだという。
             EOS
       end
 
@@ -214,9 +214,9 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_variants_text(color: true).should eq <<-EOS.chomp
-          イウ: 言う (1) | いう (1)
-          \tL1, C12\t言う\t、と警官は\e[1;4;7m言っ\e[0mた。
-          \tL2, C13\tいう\tあるのだと\e[1;4;7mいう\e[0m。
+          ## イウ: 言う (1) | いう (1)
+              L1, C12\t言う\t、と警官は\e[1;4;7m言っ\e[0mた。
+              L2, C13\tいう\tあるのだと\e[1;4;7mいう\e[0m。
           EOS
       end
 
@@ -230,12 +230,12 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
-          シコウ: 志向 (1) | 思考 (1) | 指向 (1) | 施行 (1) | 試行 (1)
-          \tL1, C1\t志向\t志向
-          \tL2, C1\t思考\t思考
-          \tL3, C1\t指向\t指向
-          \tL4, C1\t施行\t施行
-          \tL5, C1\t試行\t試行
+          ## シコウ: 志向 (1) | 思考 (1) | 指向 (1) | 施行 (1) | 試行 (1)
+              L1, C1\t志向\t志向
+              L2, C1\t思考\t思考
+              L3, C1\t指向\t指向
+              L4, C1\t施行\t施行
+              L5, C1\t試行\t試行
           EOS
       end
 
@@ -245,20 +245,20 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_variants_text(sort: :alphabetical).should eq <<-EOS.chomp
-          イシ: 意思 (1) | 意志 (1)
-          \tL1, C7\t意思\t考と試行。意思と意志。
-          \tL1, C10\t意志\t行。意思と意志。
-          シコウ: 思考 (1) | 試行 (1)
-          \tL1, C1\t思考\t思考と試行。意
-          \tL1, C4\t試行\t思考と試行。意思と意
+          ## イシ: 意思 (1) | 意志 (1)
+              L1, C7\t意思\t考と試行。意思と意志。
+              L1, C10\t意志\t行。意思と意志。
+          ## シコウ: 思考 (1) | 試行 (1)
+              L1, C1\t思考\t思考と試行。意
+              L1, C4\t試行\t思考と試行。意思と意
           EOS
         doc.report_variants_text(sort: :appearance).should eq <<-EOS.chomp
-          シコウ: 思考 (1) | 試行 (1)
-          \tL1, C1\t思考\t思考と試行。意
-          \tL1, C4\t試行\t思考と試行。意思と意
-          イシ: 意思 (1) | 意志 (1)
-          \tL1, C7\t意思\t考と試行。意思と意志。
-          \tL1, C10\t意志\t行。意思と意志。
+          ## シコウ: 思考 (1) | 試行 (1)
+              L1, C1\t思考\t思考と試行。意
+              L1, C4\t試行\t思考と試行。意思と意
+          ## イシ: 意思 (1) | 意志 (1)
+              L1, C7\t意思\t考と試行。意思と意志。
+              L1, C10\t意志\t行。意思と意志。
           EOS
       end
 
@@ -269,15 +269,15 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
-          イウ: 云う (1) | 言う (1)
-          \tL2, C1\t云う\t云う。言った。
-          \tL2, C4\t言う\t云う。言った。
-          カタ: 方 (1) | かた (1)
-          \tL1, C4\t方\t区切り方のほう。区
-          \tL1, C12\tかた\tう。区切りかたの方。
-          ホウ: ほう (1) | 方 (1)
-          \tL1, C6\tほう\t区切り方のほう。区切りか
-          \tL1, C15\t方\t切りかたの方。
+          ## イウ: 云う (1) | 言う (1)
+              L2, C1\t云う\t云う。言った。
+              L2, C4\t言う\t云う。言った。
+          ## カタ: 方 (1) | かた (1)
+              L1, C4\t方\t区切り方のほう。区
+              L1, C12\tかた\tう。区切りかたの方。
+          ## ホウ: ほう (1) | 方 (1)
+              L1, C6\tほう\t区切り方のほう。区切りか
+              L1, C15\t方\t切りかたの方。
           EOS
       end
 
@@ -287,9 +287,9 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
-          unix: UNIX (1) | Unix (1)
-          \tL1, C1\tUNIX\tUNIXとUnix
-          \tL1, C6\tUnix\tUNIXとUnix。
+          ## unix: UNIX (1) | Unix (1)
+              L1, C1\tUNIX\tUNIXとUnix
+              L1, C6\tUnix\tUNIXとUnix。
           EOS
       end
 
@@ -299,9 +299,9 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_variants_text.should eq <<-EOS.chomp
-          unix: UNIX (1) | Unix (1)
-          \tL1, C1\tUNIX\tUNIXとUnix
-          \tL1, C6\tUnix\tUNIXとUnix。Grey
+          ## unix: UNIX (1) | Unix (1)
+              L1, C1\tUNIX\tUNIXとUnix
+              L1, C6\tUnix\tUNIXとUnix。Grey
           EOS
       end
 
@@ -316,10 +316,10 @@ describe "Hyoki" do
             .map { |f| File.open(f.path) }
           doc = Hyoki::Document.new(files)
           doc.report_variants_text.should eq <<-EOS.chomp
-            イウ: 言う (2) | いう (1)
-            \t#{files[0].path}\tL1, C12\t言う\t、と警官は言った。
-            \t#{files[1].path}\tL1, C13\tいう\tあるのだという。
-            \t#{files[2].path}\tL1, C1\t言う\t言われてみれば
+            ## イウ: 言う (2) | いう (1)
+                #{files[0].path}\tL1, C12\t言う\t、と警官は言った。
+                #{files[1].path}\tL1, C13\tいう\tあるのだという。
+                #{files[2].path}\tL1, C1\t言う\t言われてみれば
             EOS
           files.each &.delete
         end
@@ -334,10 +334,10 @@ describe "Hyoki" do
             EOS
           doc = Hyoki::Document.new(input)
           doc.report_variants_text.should eq <<-EOS.chomp
-            イウ: 言う (2) | いう (1)
-            \tL1, C12\t言う\t、と警官は言った。
-            \tL2, C13\tいう\tあるのだという。
-            \tL3, C1\t言う\t言われてみれば
+            ## イウ: 言う (2) | いう (1)
+                L1, C12\t言う\t、と警官は言った。
+                L2, C13\tいう\tあるのだという。
+                L3, C1\t言う\t言われてみれば
             EOS
         end
       end
@@ -400,9 +400,9 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         doc.report_heteronyms_text.should eq <<-EOS.chomp
-          方: カタ (1) | ホウ (1)
-          \tL1, C4\tカタ\t区切り方がわかりま
-          \tL2, C3\tホウ\tその方がいいでし
+          ## 方: カタ (1) | ホウ (1)
+              L1, C4\tカタ\t区切り方がわかりま
+              L2, C3\tホウ\tその方がいいでし
           EOS
       end
     end
