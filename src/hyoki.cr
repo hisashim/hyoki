@@ -516,7 +516,7 @@ module Hyoki
       op.parse
 
       if c.show_help
-        puts_or_print op
+        puts op
         exit 0
       end
 
@@ -560,7 +560,7 @@ module Hyoki
           raise "Invalid report type: #{c.report_type.inspect}"
         end
 
-      puts_or_print report unless report.empty?
+      puts report unless report.empty?
     end
   end
 end
