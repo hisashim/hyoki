@@ -560,6 +560,8 @@ module Hyoki
           raise "Invalid report type: #{c.report_type.inspect}"
         end
 
+      # FIXME: Avoid `Broken pipe (IO::Error)` when piped to a pager.
+      # (See https://github.com/crystal-lang/crystal/issues/7810 .)
       puts report unless report.empty?
     end
   end
