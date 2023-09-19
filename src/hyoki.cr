@@ -4,7 +4,7 @@ require "option_parser"
 module Hyoki
   VERSION = "0.1.0"
 
-  class Morpheme
+  struct Morpheme
     struct Feature
       @part_of_speech : String
       @part_of_speech_subcategory1 : String
@@ -137,7 +137,7 @@ module Hyoki
     yomi_parser.parse(string).chomp
   end
 
-  class Document
+  struct Document
     LINE_REGEX =
       /([^\r\n]*?)(\r\n|\r|\n)|(.+)/
     ASCII_WORD_REGEX =
