@@ -12,7 +12,7 @@ describe "Hyoki" do
         input = <<-EOS
           私の名前は中野です。
           EOS
-        Hyoki::Document.new(input).lines[0].morphemes.map { |m| m.surface }
+        Hyoki::Document.new(input).lines[0].morphemes.map(&.surface)
           .should eq ["私", "の", "名前", "は", "中野", "です", "。"]
       end
     end
@@ -125,8 +125,8 @@ describe "Hyoki" do
 
       it "receives Array(File) as its sources" do
         tempfiles = [
-          File.tempfile("f1", ".txt") { |f| f.print("F1\n") },
-          File.tempfile("f2", ".txt") { |f| f.print("F2") },
+          File.tempfile("f1", ".txt", &.print("F1\n")),
+          File.tempfile("f2", ".txt", &.print("F2")),
         ]
         input = tempfiles.map { |f| File.open(f.path) }
         lines = Hyoki::Document.new(input).lines
@@ -160,7 +160,7 @@ describe "Hyoki" do
         parser = Fucoidan::Fucoidan.new
         line = Hyoki::Document::Line.new(input, 0, parser)
         morphemes = Hyoki.string_to_morphemes(input, line, parser)
-        morphemes.map { |m| m.surface }.should eq ["わかり", "ませ", "ん", "。"]
+        morphemes.map(&.surface).should eq ["わかり", "ませ", "ん", "。"]
       end
     end
 
@@ -312,7 +312,7 @@ describe "Hyoki" do
             そういうことがあるのだという。
             言われてみればそのとおりだ。
             EOS
-          files = sources.map { |s| File.tempfile { |f| f.print(s) } }
+          files = sources.map { |s| File.tempfile(&.print(s)) }
             .map { |f| File.open(f.path) }
           doc = Hyoki::Document.new(files)
           doc.report_variants_text.should eq <<-EOS.chomp

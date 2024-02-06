@@ -93,7 +93,7 @@ module Hyoki
       :wcost, :cost, :index, :source_string, :line
 
     def string_indexes(string, substring)
-      string.scan(Regex.new(Regex.escape(substring))).map { |md| md.begin }
+      string.scan(Regex.new(Regex.escape(substring))).map(&.begin)
     end
 
     def string_index
@@ -220,7 +220,7 @@ module Hyoki
     # variants: words with same pronunciation and different spelling.
     def variants(lines, yomi_parser, sort) : Array(Tuple(String, Array(Morpheme)))
       morphemes_by_lexical_form_yomi =
-        lines.map { |l| l.morphemes }.flatten.group_by { |m|
+        lines.flat_map(&.morphemes).group_by { |m|
           # Group morphemes by yomi of lexical form.
           #   * When surface and lexical form are the same, yomi of surface
           #     can be used as yomi of lexical form.
@@ -250,7 +250,7 @@ module Hyoki
             else
               m.feature.lexical_form
             end
-          }.uniq.size >= 2
+          }.uniq!.size >= 2
         }
       case sort
       when :alphabetical
@@ -268,13 +268,13 @@ module Hyoki
     # with same spelling and different pronunciation.
     def heteronyms(lines, sort) : Array(Tuple(String, Array(Morpheme)))
       morphemes_by_surface =
-        lines.map { |l| l.morphemes }.flatten.group_by { |m|
+        lines.flat_map(&.morphemes).group_by { |m|
           # group morphemes by surface expression
           m.surface
         }
       surface_to_heteronyms =
         morphemes_by_surface.select { |_surface, morphemes_of_same_surface|
-          morphemes_of_same_surface.map { |m| m.feature.yomi }.uniq.size >= 2
+          morphemes_of_same_surface.map(&.feature.yomi).uniq!.size >= 2
         }
       case sort
       when :alphabetical
@@ -319,7 +319,7 @@ module Hyoki
       end
     end
 
-    def report_text(category_to_relevant_morphemes, context, color, &block)
+    def report_text(category_to_relevant_morphemes, context, color, &)
       report_items =
         category_to_relevant_morphemes.map { |category, relevant_morphemes|
           subcategories = relevant_morphemes.map { |m| yield m }
@@ -345,7 +345,7 @@ module Hyoki
     end
 
     def report_tsv(category_to_relevant_morphemes, context, color,
-                   header = <<-EOS.chomp, &block)
+                   header = <<-EOS.chomp, &)
         category\tline\tcharacter\tsubcategory\tsurface\texcerpt
         EOS
       report_lines =
@@ -357,7 +357,7 @@ module Hyoki
             subcategory = yield m
             excerpt = excerpt(m, context, color)
             [category, source_name, line_number, character_number, subcategory, m.surface, excerpt]
-              .map { |v| v.to_s.gsub(TSV_ESCAPE_REGEX, TSV_ESCAPE) }.join("\t")
+              .map(&.to_s.gsub(TSV_ESCAPE_REGEX, TSV_ESCAPE)).join("\t")
           }
         }
       [header, report_lines.flatten.join("\n")].join("\n")
