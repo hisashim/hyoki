@@ -514,9 +514,9 @@ module Hyoki
           EOS
           c.mecab_dict_dir =
             case
-            when !(Dir.exists? s)    then raise "Directory not found: #{s.inspect}"
-            when !(File.readable? s) then raise "Directory not readable: #{s.inspect}"
-            else                          s
+            when !(Dir.exists? s)          then raise "Directory not found: #{s.inspect}"
+            when !(File::Info.readable? s) then raise "Directory not readable: #{s.inspect}"
+            else                                s
             end
         }
         o.on("--help", "Show help message") { c.show_help = true }
