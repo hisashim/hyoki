@@ -293,7 +293,7 @@ describe "Hyoki" do
           EOS
       end
 
-      it "can not yet detect variants of ASCII words in general" do
+      it "can not yet detect variants of ASCII words in general (FIXME)" do
         input = <<-EOS
           UNIXとUnix。Greyとgray。Colorとcolour。
           EOS
@@ -357,6 +357,24 @@ describe "Hyoki" do
           EOS
       end
 
+      it "returns report with specified length of context" do
+        input = <<-EOS
+          流れよわが涙、と警官は言った。
+          そういうことがあるのだという。
+          EOS
+        doc = Hyoki::Document.new(input)
+        doc.report_variants_tsv(context: 0).should eq <<-EOS.chomp
+          lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+          イウ\t\t1\t12\t言う\t言っ\t言っ
+          イウ\t\t2\t13\tいう\tいう\tいう
+          EOS
+        doc.report_variants_tsv(context: {3, 3}).should eq <<-EOS.chomp
+          lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+          イウ\t\t1\t12\t言う\t言っ\t警官は言った。
+          イウ\t\t2\t13\tいう\tいう\tのだという。
+          EOS
+      end
+
       it "returns report with highlighting when color is true" do
         input = <<-EOS
           流れよわが涙、と警官は言った。
@@ -367,6 +385,25 @@ describe "Hyoki" do
           lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
           イウ\t\t1\t12\t言う\t言っ\t、と警官は\e[1;4;7m言っ\e[0mた。
           イウ\t\t2\t13\tいう\tいう\tあるのだと\e[1;4;7mいう\e[0m。
+          EOS
+      end
+
+      it "returns report on variants, without context if none" do
+        input = <<-EOS
+          志向
+          思考
+          指向
+          施行
+          試行
+          EOS
+        doc = Hyoki::Document.new(input)
+        doc.report_variants_tsv.should eq <<-EOS.chomp
+          lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+          シコウ\t\t1\t1\t志向\t志向\t志向
+          シコウ\t\t2\t1\t思考\t思考\t思考
+          シコウ\t\t3\t1\t指向\t指向\t指向
+          シコウ\t\t4\t1\t施行\t施行\t施行
+          シコウ\t\t5\t1\t試行\t試行\t試行
           EOS
       end
 
@@ -389,6 +426,84 @@ describe "Hyoki" do
           イシ\t\t1\t7\t意思\t意思\t考と試行。意思と意志。
           イシ\t\t1\t10\t意志\t意志\t行。意思と意志。
           EOS
+      end
+
+      it "uses yomi of lexical form iff surface differs from lexical form" do
+        input = <<-EOS
+          区切り方のほう。区切りかたの方。
+          云う。言った。
+          EOS
+        doc = Hyoki::Document.new(input)
+        doc.report_variants_tsv.should eq <<-EOS.chomp
+          lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+          イウ\t\t2\t1\t云う\t云う\t云う。言った。
+          イウ\t\t2\t4\t言う\t言っ\t云う。言った。
+          カタ\t\t1\t4\t方\t方\t区切り方のほう。区
+          カタ\t\t1\t12\tかた\tかた\tう。区切りかたの方。
+          ホウ\t\t1\t6\tほう\tほう\t区切り方のほう。区切りか
+          ホウ\t\t1\t15\t方\t方\t切りかたの方。
+          EOS
+      end
+
+      it "detects case variants of words in ASCII" do
+        input = <<-EOS
+          UNIXとUnix。
+          EOS
+        doc = Hyoki::Document.new(input)
+        doc.report_variants_tsv.should eq <<-EOS.chomp
+          lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+          unix\t\t1\t1\tUNIX\tUNIX\tUNIXとUnix
+          unix\t\t1\t6\tUnix\tUnix\tUNIXとUnix。
+          EOS
+      end
+
+      it "can not yet detect variants of ASCII words in general (FIXME)" do
+        input = <<-EOS
+          UNIXとUnix。Greyとgray。Colorとcolour。
+          EOS
+        doc = Hyoki::Document.new(input)
+        doc.report_variants_tsv.should eq <<-EOS.chomp
+          lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+          unix\t\t1\t1\tUNIX\tUNIX\tUNIXとUnix
+          unix\t\t1\t6\tUnix\tUnix\tUNIXとUnix。Grey
+          EOS
+      end
+
+      context "input is from multiple files" do
+        it "shows corresponding source file names" do
+          sources = <<-EOS.lines(chomp: false)
+            流れよわが涙、と警官は言った。
+            そういうことがあるのだという。
+            言われてみればそのとおりだ。
+            EOS
+          files = sources.map { |s| File.tempfile(&.print(s)) }
+            .map { |f| File.open(f.path) }
+          doc = Hyoki::Document.new(files)
+          doc.report_variants_tsv.should eq <<-EOS.chomp
+            lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+            イウ\t#{files[0].path}\t1\t12\t言う\t言っ\t、と警官は言った。
+            イウ\t#{files[1].path}\t1\t13\tいう\tいう\tあるのだという。
+            イウ\t#{files[2].path}\t1\t1\t言う\t言わ\t言われてみれば
+            EOS
+          files.each &.delete
+        end
+      end
+
+      context "input is from non-file stream (e.g. ARGF, STDIN)" do
+        it "omits source file names" do
+          input = <<-EOS
+            流れよわが涙、と警官は言った。
+            そういうことがあるのだという。
+            言われてみればそのとおりだ。
+            EOS
+          doc = Hyoki::Document.new(input)
+          doc.report_variants_tsv.should eq <<-EOS.chomp
+            lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+            イウ\t\t1\t12\t言う\t言っ\t、と警官は言った。
+            イウ\t\t2\t13\tいう\tいう\tあるのだという。
+            イウ\t\t3\t1\t言う\t言わ\t言われてみれば
+            EOS
+        end
       end
     end
 

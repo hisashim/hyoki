@@ -382,7 +382,16 @@ module Hyoki
       lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
       EOS
       report_tsv(variants(@lines, @yomi_parser, sort), context, color, header) { |morpheme|
-        morpheme.feature.lexical_form # categorize subitems by dictionary form
+        surface = morpheme.surface
+        if ASCII_WORD_REGEX.match surface
+          # Kludge: For ASCII words, categorize subitems by surface as a
+          # substitute of its dictionary form.
+          # TODO: Acquire dictionary forms of foreign words somehow.
+          surface
+        else
+          # In general, categorize subitems by dictionary form.
+          morpheme.feature.lexical_form
+        end
       }
     end
 
