@@ -147,6 +147,9 @@ module Hyoki
     TSV_ESCAPE_REGEX =
       Regex.new(TSV_ESCAPE.keys.map { |k| "(?:#{Regex.escape(k)})" }.join("|"))
 
+    alias ReportItem = Tuple(String, Array(Morpheme))
+    alias ReportItems = Array(ReportItem)
+
     struct Line
       @source_string : String
       @body : String
@@ -218,7 +221,7 @@ module Hyoki
 
     # Returns an associative list of yomi (of dictionary form) to
     # variants: words with same pronunciation and different spelling.
-    def variants(lines, yomi_parser, sort) : Array(Tuple(String, Array(Morpheme)))
+    def variants(lines, yomi_parser, sort) : ReportItems
       morphemes_by_lexical_form_yomi =
         lines.flat_map(&.morphemes).group_by { |m|
           # Group morphemes by yomi of lexical form.
@@ -266,7 +269,7 @@ module Hyoki
 
     # Returns an associative list of surface expression to heteronyms: words
     # with same spelling and different pronunciation.
-    def heteronyms(lines, sort) : Array(Tuple(String, Array(Morpheme)))
+    def heteronyms(lines, sort) : ReportItems
       morphemes_by_surface =
         lines.flat_map(&.morphemes).group_by { |m|
           # group morphemes by surface expression
