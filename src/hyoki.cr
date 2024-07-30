@@ -322,9 +322,9 @@ module Hyoki
       end
     end
 
-    def report_text(category_to_relevant_morphemes, context, color, &)
+    def report_text(items, context, color, &)
       report_items =
-        category_to_relevant_morphemes.map { |category, relevant_morphemes|
+        items.map { |category, relevant_morphemes|
           subcategories = relevant_morphemes.map { |m| yield m }
           item_heading =
             "## #{category}: " +
@@ -347,12 +347,9 @@ module Hyoki
       report_items.join("\n")
     end
 
-    def report_tsv(category_to_relevant_morphemes, context, color,
-                   header = <<-EOS.chomp, &)
-        category\tline\tcharacter\tsubcategory\tsurface\texcerpt
-        EOS
+    def report_tsv(items, context, color, header, &)
       report_lines =
-        category_to_relevant_morphemes.map { |category, relevant_morphemes|
+        items.map { |category, relevant_morphemes|
           relevant_morphemes.map { |m|
             source_name = m.line.source_name
             line_number = m.line.index + 1
@@ -366,50 +363,64 @@ module Hyoki
       [header, report_lines.flatten.join("\n")].join("\n")
     end
 
-    def report_variants_text(context = 5, sort = :alphabetical, color = false)
-      report_text(variants(@lines, @yomi_parser, sort), context, color) { |morpheme|
-        surface = morpheme.surface
-        if ASCII_WORD_REGEX.match surface
-          # Kludge: For ASCII words, categorize subitems by surface as a
-          # substitute of its dictionary form.
-          # TODO: Acquire dictionary forms of foreign words somehow.
-          surface
+    TSV_HEADER_FOR_VARIANTS =
+      ["lexical form yomi", "source", "line", "character", "lexical form",
+       "surface", "excerpt"].join("\t")
+
+    TSV_HEADER_FOR_HETERONYMS =
+      ["surface", "source", "line", "character", "yomi", "surface",
+      "excerpt"].join("\t")
+
+    def report(type = :variants, format = :text, context = 5,
+               sort = :alphabetical, color = false, header = nil)
+      case type
+      when :variants
+        items = variants(@lines, @yomi_parser, sort)
+        header ||= TSV_HEADER_FOR_VARIANTS
+        case format
+        when :text
+          report_text(items, context, color) { |morpheme|
+            surface = morpheme.surface
+            if ASCII_WORD_REGEX.match surface
+              # Kludge: For ASCII words, categorize subitems by surface as a
+              # substitute of its dictionary form.
+              # TODO: Acquire dictionary forms of foreign words somehow.
+              surface
+            else
+              # In general, categorize subitems by dictionary form.
+              morpheme.feature.lexical_form
+            end
+          }
+        when :tsv
+          report_tsv(items, context, color, header: header) { |morpheme|
+            surface = morpheme.surface
+            if ASCII_WORD_REGEX.match surface
+              surface
+            else
+              morpheme.feature.lexical_form
+            end
+          }
         else
-          # In general, categorize subitems by dictionary form.
-          morpheme.feature.lexical_form
+          raise "Invalid report format: #{format.inspect}"
         end
-      }
-    end
-
-    def report_variants_tsv(context = 5, sort = :alphabetical, color = false, header = <<-EOS.chomp)
-      lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
-      EOS
-      report_tsv(variants(@lines, @yomi_parser, sort), context, color, header) { |morpheme|
-        surface = morpheme.surface
-        if ASCII_WORD_REGEX.match surface
-          # Kludge: For ASCII words, categorize subitems by surface as a
-          # substitute of its dictionary form.
-          # TODO: Acquire dictionary forms of foreign words somehow.
-          surface
+      when :heteronyms
+        items = heteronyms(@lines, sort)
+        header ||= TSV_HEADER_FOR_HETERONYMS
+        case format
+        when :text
+          report_text(items, context, color) { |morpheme|
+            morpheme.feature.yomi # categorize subitems by yomi
+          }
+        when :tsv
+          report_tsv(items, context, color, header: header) { |morpheme|
+            morpheme.feature.yomi # categorize subitems by yomi
+          }
         else
-          # In general, categorize subitems by dictionary form.
-          morpheme.feature.lexical_form
+          raise "Invalid report format: #{format.inspect}"
         end
-      }
-    end
-
-    def report_heteronyms_text(context = 5, sort = :alphabetical, color = false)
-      report_text(heteronyms(@lines, sort), context, color) { |morpheme|
-        morpheme.feature.yomi # categorize subitems by yomi
-      }
-    end
-
-    def report_heteronyms_tsv(context = 5, sort = :alphabetical, color = false, header = <<-EOS.chomp)
-      surface\tsource\tline\tcharacter\tyomi\tsurface\texcerpt
-      EOS
-      report_tsv(heteronyms(@lines, sort), context, color, header) { |morpheme|
-        morpheme.feature.yomi # categorize subitems by yomi
-      }
+      else
+        raise "Invalid report type: #{type.inspect}"
+      end
     end
   end
 
@@ -558,14 +569,14 @@ module Hyoki
         case c.report_type
         when :variants
           case c.output_format
-          when :text then doc.report_variants_text(c.context, c.sort, color)
-          when :tsv  then doc.report_variants_tsv(c.context, c.sort, color)
+          when :text then doc.report(type: :variants, format: :text, context: c.context, sort: c.sort, color: color)
+          when :tsv  then doc.report(type: :variants, format: :tsv, context: c.context, sort: c.sort, color: color)
           else            raise "Invalid output format: #{c.output_format.inspect}"
           end
         when :heteronyms
           case c.output_format
-          when :text then doc.report_heteronyms_text(c.context, c.sort, color)
-          when :tsv  then doc.report_heteronyms_tsv(c.context, c.sort, color)
+          when :text then doc.report(type: :heteronyms, format: :text, context: c.context, sort: c.sort, color: color)
+          when :tsv  then doc.report(type: :heteronyms, format: :tsv, context: c.context, sort: c.sort, color: color)
           else            raise "Invalid output format: #{c.output_format.inspect}"
           end
         else
