@@ -146,6 +146,12 @@ module Hyoki
       {"\n" => "\\n", "\t" => "\\t", "\r" => "\\r", "\\" => "\\\\"}
     TSV_ESCAPE_REGEX =
       Regex.new(TSV_ESCAPE.keys.map { |k| "(?:#{Regex.escape(k)})" }.join("|"))
+    TSV_HEADER_VARIANTS =
+      ["lexical form yomi", "source", "line", "character", "lexical form",
+       "surface", "excerpt"].join("\t")
+    TSV_HEADER_HETERONYMS =
+      ["surface", "source", "line", "character", "yomi", "surface",
+       "excerpt"].join("\t")
 
     alias ReportItem = Tuple(String, Array(Morpheme))
     alias ReportItems = Array(ReportItem)
@@ -408,14 +414,6 @@ module Hyoki
         raise "Invalid report format: #{format.inspect}"
       end
     end
-
-    TSV_HEADER_VARIANTS =
-      ["lexical form yomi", "source", "line", "character", "lexical form",
-       "surface", "excerpt"].join("\t")
-
-    TSV_HEADER_HETERONYMS =
-      ["surface", "source", "line", "character", "yomi", "surface",
-       "excerpt"].join("\t")
 
     def report(type = :variants, format = :text, context = 5,
                sort = :alphabetical, color = false, header = nil)
