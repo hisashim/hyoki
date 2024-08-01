@@ -322,7 +322,7 @@ module Hyoki
       end
     end
 
-    def report_text(items, context, color, &)
+    def items_to_text(items, context, color, &)
       report_items =
         items.map { |category, relevant_morphemes|
           subcategories = relevant_morphemes.map { |m| yield m }
@@ -347,7 +347,7 @@ module Hyoki
       report_items.join("\n")
     end
 
-    def report_tsv(items, context, color, header, &)
+    def items_to_tsv(items, context, color, header, &)
       report_lines =
         items.map { |category, relevant_morphemes|
           relevant_morphemes.map { |m|
@@ -363,58 +363,83 @@ module Hyoki
       [header, report_lines.flatten.join("\n")].join("\n")
     end
 
-    TSV_HEADER_FOR_VARIANTS =
+    def report_variants(format, context, sort, color, header)
+      items = variants(@lines, @yomi_parser, sort)
+      case format
+      when :text
+        items_to_text(items, context, color) { |morpheme|
+          surface = morpheme.surface
+          if ASCII_WORD_REGEX.match surface
+            # Kludge: For ASCII words, categorize subitems by surface as a
+            # substitute of its dictionary form.
+            # TODO: Acquire dictionary forms of foreign words somehow.
+            surface
+          else
+            # In general, categorize subitems by dictionary form.
+            morpheme.feature.lexical_form
+          end
+        }
+      when :tsv
+        items_to_tsv(items, context, color, header: header) { |morpheme|
+          surface = morpheme.surface
+          if ASCII_WORD_REGEX.match surface
+            surface
+          else
+            morpheme.feature.lexical_form
+          end
+        }
+      else
+        raise "Invalid report format: #{format.inspect}"
+      end
+    end
+
+    def report_heteronyms(format, context, sort, color, header)
+      items = heteronyms(@lines, sort)
+      case format
+      when :text
+        items_to_text(items, context, color) { |morpheme|
+          morpheme.feature.yomi # categorize subitems by yomi
+        }
+      when :tsv
+        items_to_tsv(items, context, color, header: header) { |morpheme|
+          morpheme.feature.yomi # categorize subitems by yomi
+        }
+      else
+        raise "Invalid report format: #{format.inspect}"
+      end
+    end
+
+    TSV_HEADER_VARIANTS =
       ["lexical form yomi", "source", "line", "character", "lexical form",
        "surface", "excerpt"].join("\t")
 
-    TSV_HEADER_FOR_HETERONYMS =
+    TSV_HEADER_HETERONYMS =
       ["surface", "source", "line", "character", "yomi", "surface",
-      "excerpt"].join("\t")
+       "excerpt"].join("\t")
 
     def report(type = :variants, format = :text, context = 5,
                sort = :alphabetical, color = false, header = nil)
+      # FIXME: the application somehow slows down if we do not use
+      # conditionals (case..when) and unify invocations of the same methods
+      # (e.g. report_variants(format, context, sort, color, header))
       case type
       when :variants
-        items = variants(@lines, @yomi_parser, sort)
-        header ||= TSV_HEADER_FOR_VARIANTS
         case format
         when :text
-          report_text(items, context, color) { |morpheme|
-            surface = morpheme.surface
-            if ASCII_WORD_REGEX.match surface
-              # Kludge: For ASCII words, categorize subitems by surface as a
-              # substitute of its dictionary form.
-              # TODO: Acquire dictionary forms of foreign words somehow.
-              surface
-            else
-              # In general, categorize subitems by dictionary form.
-              morpheme.feature.lexical_form
-            end
-          }
+          report_variants(format, context, sort, color, header)
         when :tsv
-          report_tsv(items, context, color, header: header) { |morpheme|
-            surface = morpheme.surface
-            if ASCII_WORD_REGEX.match surface
-              surface
-            else
-              morpheme.feature.lexical_form
-            end
-          }
+          header ||= TSV_HEADER_VARIANTS
+          report_variants(format, context, sort, color, header)
         else
           raise "Invalid report format: #{format.inspect}"
         end
       when :heteronyms
-        items = heteronyms(@lines, sort)
-        header ||= TSV_HEADER_FOR_HETERONYMS
         case format
         when :text
-          report_text(items, context, color) { |morpheme|
-            morpheme.feature.yomi # categorize subitems by yomi
-          }
+          report_heteronyms(format, context, sort, color, header)
         when :tsv
-          report_tsv(items, context, color, header: header) { |morpheme|
-            morpheme.feature.yomi # categorize subitems by yomi
-          }
+          header ||= TSV_HEADER_HETERONYMS
+          report_heteronyms(format, context, sort, color, header)
         else
           raise "Invalid report format: #{format.inspect}"
         end
@@ -566,21 +591,21 @@ module Hyoki
       doc = Hyoki::Document.new(sources, mecab_dict_dir: c.mecab_dict_dir)
 
       report =
-        case c.report_type
+        case type = c.report_type
         when :variants
-          case c.output_format
-          when :text then doc.report(type: :variants, format: :text, context: c.context, sort: c.sort, color: color)
-          when :tsv  then doc.report(type: :variants, format: :tsv, context: c.context, sort: c.sort, color: color)
-          else            raise "Invalid output format: #{c.output_format.inspect}"
+          case format = c.output_format
+          when :text then doc.report(type, format, c.context, c.sort, color)
+          when :tsv  then doc.report(type, format, c.context, c.sort, color)
+          else            raise "Invalid output format: #{format.inspect}"
           end
         when :heteronyms
-          case c.output_format
-          when :text then doc.report(type: :heteronyms, format: :text, context: c.context, sort: c.sort, color: color)
-          when :tsv  then doc.report(type: :heteronyms, format: :tsv, context: c.context, sort: c.sort, color: color)
-          else            raise "Invalid output format: #{c.output_format.inspect}"
+          case format = c.output_format
+          when :text then doc.report(type, format, c.context, c.sort, color)
+          when :tsv  then doc.report(type, format, c.context, c.sort, color)
+          else            raise "Invalid output format: #{format.inspect}"
           end
         else
-          raise "Invalid report type: #{c.report_type.inspect}"
+          raise "Invalid report type: #{type.inspect}"
         end
 
       # FIXME: Avoid `Broken pipe (IO::Error)` when piped to a pager.
