@@ -306,6 +306,18 @@ describe "Hyoki" do
             EOS
         end
 
+        it "excludes ASCII-only words if include_ascii is false" do
+          input = <<-EOS
+            UNIXとUnix。思考と試行。
+            EOS
+          doc = Hyoki::Document.new(input)
+          doc.report(include_ascii: false).should eq <<-EOS.chomp
+            ## シコウ: 思考 (1) | 試行 (1)
+                L1, C11\t思考\tUnix。思考と試行。
+                L1, C14\t試行\tx。思考と試行。
+            EOS
+        end
+
         context "input is from multiple files" do
           it "shows corresponding source file names" do
             sources = <<-EOS.lines(chomp: false)
@@ -324,6 +336,18 @@ describe "Hyoki" do
               EOS
             files.each &.delete
           end
+        end
+
+        it "excludes ASCII-only words if include_ascii is false" do
+          input = <<-EOS
+            UNIXとUnix。思考と試行。
+            EOS
+          doc = Hyoki::Document.new(input)
+          doc.report(format: :tsv, include_ascii: false).should eq <<-EOS.chomp
+            lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+            シコウ\t\t1\t11\t思考\t思考\tUnix。思考と試行。
+            シコウ\t\t1\t14\t試行\t試行\tx。思考と試行。
+            EOS
         end
 
         context "input is from non-file stream (e.g. ARGF, STDIN)" do

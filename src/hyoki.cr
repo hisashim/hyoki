@@ -227,7 +227,7 @@ module Hyoki
 
     # Returns an associative list of yomi (of dictionary form) to
     # variants: words with same pronunciation and different spelling.
-    def variants(lines, yomi_parser, sort) : ReportItems
+    def variants(lines, yomi_parser, sort, include_ascii) : ReportItems
       morphemes_by_lexical_form_yomi =
         lines.flat_map(&.morphemes).group_by { |m|
           # Group morphemes by yomi of lexical form.
@@ -261,6 +261,14 @@ module Hyoki
             end
           }.uniq!.size >= 2
         }
+
+      # exclude ASCII-only items if specified such.
+      if include_ascii == false
+        lexical_form_yomi_to_variants.reject! { |key, _morphemes|
+          ASCII_WORD_REGEX.match(key)
+        }
+      end
+
       case sort
       when :alphabetical
         lexical_form_yomi_to_variants.to_a.sort_by { |lfyomi, _morphemes_of_same_lfyomi|
@@ -275,7 +283,7 @@ module Hyoki
 
     # Returns an associative list of surface expression to heteronyms: words
     # with same spelling and different pronunciation.
-    def heteronyms(lines, sort) : ReportItems
+    def heteronyms(lines, sort, include_ascii) : ReportItems
       morphemes_by_surface =
         lines.flat_map(&.morphemes).group_by { |m|
           # group morphemes by surface expression
@@ -285,6 +293,14 @@ module Hyoki
         morphemes_by_surface.select { |_surface, morphemes_of_same_surface|
           morphemes_of_same_surface.map(&.feature.yomi).uniq!.size >= 2
         }
+
+      # exclude ASCII-only items if specified such.
+      if include_ascii == false
+        surface_to_heteronyms.reject! { |key, _morphemes|
+          ASCII_WORD_REGEX.match(key)
+        }
+      end
+
       case sort
       when :alphabetical
         surface_to_heteronyms.to_a.sort_by { |surface, _morphemes_of_same_surface|
@@ -369,8 +385,8 @@ module Hyoki
       [header, report_lines.flatten.join("\n")].join("\n")
     end
 
-    def report_variants(format, context, sort, color, header)
-      items = variants(@lines, @yomi_parser, sort)
+    def report_variants(format, context, sort, color, header, include_ascii)
+      items = variants(@lines, @yomi_parser, sort, include_ascii)
       case format
       when :text
         items_to_text(items, context, color) { |morpheme|
@@ -399,8 +415,8 @@ module Hyoki
       end
     end
 
-    def report_heteronyms(format, context, sort, color, header)
-      items = heteronyms(@lines, sort)
+    def report_heteronyms(format, context, sort, color, header, include_ascii)
+      items = heteronyms(@lines, sort, include_ascii)
       case format
       when :text
         items_to_text(items, context, color) { |morpheme|
@@ -416,7 +432,8 @@ module Hyoki
     end
 
     def report(type = :variants, format = :text, context = 5,
-               sort = :alphabetical, color = false, header = nil)
+               sort = :alphabetical, color = false, header = nil,
+               include_ascii = true)
       # FIXME: the application somehow slows down if we do not use
       # conditionals (case..when) and unify invocations of the same methods
       # (e.g. report_variants(format, context, sort, color, header))
@@ -424,20 +441,20 @@ module Hyoki
       when :variants
         case format
         when :text
-          report_variants(format, context, sort, color, header)
+          report_variants(format, context, sort, color, header, include_ascii)
         when :tsv
           header ||= TSV_HEADER_VARIANTS
-          report_variants(format, context, sort, color, header)
+          report_variants(format, context, sort, color, header, include_ascii)
         else
           raise "Invalid report format: #{format.inspect}"
         end
       when :heteronyms
         case format
         when :text
-          report_heteronyms(format, context, sort, color, header)
+          report_heteronyms(format, context, sort, color, header, include_ascii)
         when :tsv
           header ||= TSV_HEADER_HETERONYMS
-          report_heteronyms(format, context, sort, color, header)
+          report_heteronyms(format, context, sort, color, header, include_ascii)
         else
           raise "Invalid report format: #{format.inspect}"
         end
@@ -454,11 +471,12 @@ module Hyoki
       color : Symbol,
       context : Int32 | Tuple(Int32, Int32),
       sort : Symbol,
+      include_ascii : Bool,
       mecab_dict_dir : String | Nil,
       show_help : Bool,
       show_version : Bool do
       setter :report_type, :output_format, :color, :context, :sort,
-        :mecab_dict_dir, :show_help, :show_version
+        :include_ascii, :mecab_dict_dir, :show_help, :show_version
     end
 
     DEFAULT_CONFIG =
@@ -468,6 +486,7 @@ module Hyoki
         color: :auto,
         context: 5,
         sort: :alphabetical,
+        include_ascii: true,
         mecab_dict_dir: nil,
         show_help: false,
         show_version: false
@@ -545,6 +564,17 @@ module Hyoki
             else                     raise "Invalid value for sort: #{s.inspect}"
             end
         }
+        o.on("--include-ascii=true|false", <<-EOS.chomp) { |s|
+          Specify whether to include ASCII-only items in the output \
+          (default: #{c.include_ascii})
+          EOS
+          c.include_ascii =
+            case s
+            when "true"  then true
+            when "false" then false
+            else              raise "Invalid value for include_ascii: #{s.inspect}"
+            end
+        }
         o.on("--mecab-dict-dir=DIR", <<-EOS.chomp) { |s|
           Specify MeCab dictionary directory to use \
           (e.g. /var/lib/mecab/dic/ipadic-utf8)
@@ -592,15 +622,21 @@ module Hyoki
         case type = c.report_type
         when :variants
           case format = c.output_format
-          when :text then doc.report(type, format, c.context, c.sort, color)
-          when :tsv  then doc.report(type, format, c.context, c.sort, color)
-          else            raise "Invalid output format: #{format.inspect}"
+          when :text
+            doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
+          when :tsv
+            doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
+          else
+            raise "Invalid output format: #{format.inspect}"
           end
         when :heteronyms
           case format = c.output_format
-          when :text then doc.report(type, format, c.context, c.sort, color)
-          when :tsv  then doc.report(type, format, c.context, c.sort, color)
-          else            raise "Invalid output format: #{format.inspect}"
+          when :text
+            doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
+          when :tsv
+            doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
+          else
+            raise "Invalid output format: #{format.inspect}"
           end
         else
           raise "Invalid report type: #{type.inspect}"

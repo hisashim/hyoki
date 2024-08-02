@@ -29,6 +29,7 @@ Options:
     --color=auto|always|never        Enable/disable excerpt highlighting (default: auto)
     --context=N|N,M                  Set excerpt context to N (or preceding N and succeeding M) characters (default: 5)
     --sort=alphabetical|appearance   Specify how report items should be sorted (default: alphabetical)
+    --include-ascii=true|false       Specify whether to include ASCII-only items in the output (default: true)
     --mecab-dict-dir=DIR             Specify MeCab dictionary directory to use (e.g. /var/lib/mecab/dic/ipadic-utf8)
     --help                           Show help message
     --version                        Show version
@@ -106,6 +107,17 @@ lexical form yomi       source  line    character       lexical form    surface 
 カタ    -       2       6       かた    かた    その区切りかたの方がいい
 ホウ    -       1       8       ほう    ほう    区切り方のほうがいい。
 ホウ    -       2       9       方      方      切りかたの方がいい。
+$
+```
+
+**Skip ASCII-only words**: `--include-ascii=false` removes ASCII-only items from the output. This may help you when you are examining non-ASCII words within multilingual contents.
+
+```
+$ echo 'UNIXとUnix。思考と試行。' | hyoki | grep '^##'
+## unix: UNIX (1) | Unix (1)
+## シコウ: 思考 (1) | 試行 (1)
+$ echo 'UNIXとUnix。思考と試行。' | hyoki --include-ascii=false | grep '^##'
+## シコウ: 思考 (1) | 試行 (1)
 $
 ```
 
