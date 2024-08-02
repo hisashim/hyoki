@@ -467,7 +467,7 @@ module Hyoki
   module CLI
     record Config,
       report_type : Symbol,
-      output_format : Symbol,
+      report_format : Symbol,
       color : Symbol,
       context : Int32 | Tuple(Int32, Int32),
       sort : Symbol,
@@ -475,14 +475,14 @@ module Hyoki
       mecab_dict_dir : String | Nil,
       show_help : Bool,
       show_version : Bool do
-      setter :report_type, :output_format, :color, :context, :sort,
+      setter :report_type, :report_format, :color, :context, :sort,
         :include_ascii, :mecab_dict_dir, :show_help, :show_version
     end
 
     DEFAULT_CONFIG =
       Config.new(
         report_type: :variants,
-        output_format: :text,
+        report_format: :text,
         color: :auto,
         context: 5,
         sort: :alphabetical,
@@ -518,14 +518,14 @@ module Hyoki
             else                   raise "Invalid report type: #{s.inspect}"
             end
         }
-        o.on("--output-format=text|tsv", <<-EOS.chomp) { |s|
-          Choose output format (default: #{c.output_format})
+        o.on("--report-format=text|tsv", <<-EOS.chomp) { |s|
+          Choose report format (default: #{c.report_format})
           EOS
-          c.output_format =
+          c.report_format =
             case s
             when "text" then :text
             when "tsv"  then :tsv
-            else             raise "Invalid output format: #{s.inspect}"
+            else             raise "Invalid report format: #{s.inspect}"
             end
         }
         o.on("--color=auto|always|never", <<-EOS.chomp) { |s|
@@ -621,22 +621,22 @@ module Hyoki
       report =
         case type = c.report_type
         when :variants
-          case format = c.output_format
+          case format = c.report_format
           when :text
             doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
           when :tsv
             doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
           else
-            raise "Invalid output format: #{format.inspect}"
+            raise "Invalid report format: #{format.inspect}"
           end
         when :heteronyms
-          case format = c.output_format
+          case format = c.report_format
           when :text
             doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
           when :tsv
             doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
           else
-            raise "Invalid output format: #{format.inspect}"
+            raise "Invalid report format: #{format.inspect}"
           end
         else
           raise "Invalid report type: #{type.inspect}"

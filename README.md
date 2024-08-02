@@ -25,7 +25,7 @@ Usage:
 Options:
     --report-type=variants|heteronyms
                                      Choose report type (default: variants)
-    --output-format=text|tsv         Choose output format (default: text)
+    --report-format=text|tsv         Choose report format (default: text)
     --color=auto|always|never        Enable/disable excerpt highlighting (default: auto)
     --context=N|N,M                  Set excerpt context to N (or preceding N and succeeding M) characters (default: 5)
     --sort=alphabetical|appearance   Specify how report items should be sorted (default: alphabetical)
