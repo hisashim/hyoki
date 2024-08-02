@@ -2,7 +2,7 @@ require "fucoidan"
 require "option_parser"
 
 module Hyoki
-  VERSION = "0.2.0"
+  VERSION = "0.3.0"
 
   struct Morpheme
     struct Feature
