@@ -6,6 +6,15 @@ describe "Hyoki" do
     SemanticVersion.parse(Hyoki::VERSION).is_a? SemanticVersion
   end
 
+  describe ".string_indexes" do
+    it "returns the indexes (start position) of all occurences of the substring" do
+      input = <<-EOS
+        する・しない・する・しない・する・しない
+        EOS
+      Hyoki.string_indexes(input, "する").should eq [0, 7, 14]
+    end
+  end
+
   describe ".string_to_morphemes" do
     it "converts string to morphemes" do
       input = <<-EOS
@@ -59,19 +68,6 @@ describe "Hyoki" do
         Hyoki::Document.new(input).lines[0].morphemes[1].index.should eq 1
         Hyoki::Document.new(input).lines[1].morphemes[0].index.should eq 0
         Hyoki::Document.new(input).lines[1].morphemes[1].index.should eq 1
-      end
-    end
-
-    describe "#string_indexes" do
-      it "returns the indexes (start position) of all occurences of the substring" do
-        input = <<-EOS
-          する・しない・する・しない・する・しない
-          EOS
-        line = Hyoki::Document.new(input).lines[0]
-        morphemes = line.morphemes
-        m0 = morphemes[0]
-        m0.surface.should eq "する"
-        m0.string_indexes(line.body, m0.surface).should eq [0, 7, 14]
       end
     end
 

@@ -92,15 +92,11 @@ module Hyoki
       :lc_attr, :posid, :char_type, :stat, :isbest, :alpha, :beta, :prob,
       :wcost, :cost, :index, :source_string, :line
 
-    def string_indexes(string, substring)
-      string.scan(Regex.new(Regex.escape(substring))).map(&.begin)
-    end
-
     def string_index
       if @string_index >= 0 # FIXME: kludge to pass typechecking
         @string_index
       else
-        str_idxs = string_indexes(@source_string, @surface)
+        str_idxs = Hyoki.string_indexes(@source_string, @surface)
         str_len = @source_string.size
         # add 0.01 to avoid divide-by-zero error
         str_idx_proportions = str_idxs.map { |str_idx| (str_idx.to_f / str_len) + 0.01 }
@@ -112,6 +108,10 @@ module Hyoki
         @string_index = str_idx_candidates.first.first # best guess
       end
     end
+  end
+
+  def self.string_indexes(string, substring)
+    string.scan(Regex.new(Regex.escape(substring))).map(&.begin)
   end
 
   def self.string_to_morphemes(string, line, parser)
