@@ -96,7 +96,7 @@ module Hyoki
       if @string_index >= 0 # FIXME: kludge to pass typechecking
         @string_index
       else
-        str_idxs = Hyoki.string_indexes(@source_string, @surface)
+        str_idxs = @line.surface_indexes(@surface)
         str_len = @source_string.size
         # add 0.01 to avoid divide-by-zero error
         str_idx_proportions = str_idxs.map { |str_idx| (str_idx.to_f / str_len) + 0.01 }
@@ -162,6 +162,7 @@ module Hyoki
       @eol : String | Nil
       @index : Int32
       @morphemes : Array(Morpheme) | Nil
+      @surface_indexes : Hash(String, Array(Int32))
       @parser : Fucoidan::Fucoidan
       @source_name : String | Nil
 
@@ -182,6 +183,7 @@ module Hyoki
         @eol = eol
         @index = index
         @morphemes = nil
+        @surface_indexes = Hash(String, Array(Int32)).new
         @parser = parser
         @source_name =
           if source_io.responds_to?(:path)
@@ -195,6 +197,14 @@ module Hyoki
 
       def morphemes
         @morphemes ||= Hyoki.string_to_morphemes(body, self, @parser)
+      end
+
+      def surface_indexes(surface)
+        if indexes = @surface_indexes[surface]?
+          indexes
+        else
+          @surface_indexes[surface] = Hyoki.string_indexes(@source_string, surface)
+        end
       end
     end
 
