@@ -6,6 +6,27 @@ describe "Hyoki" do
     SemanticVersion.parse(Hyoki::VERSION).is_a? SemanticVersion
   end
 
+  describe ".string_to_morphemes" do
+    it "converts string to morphemes" do
+      input = <<-EOS
+        わかりません。
+        EOS
+      parser = Fucoidan::Fucoidan.new
+      line = Hyoki::Document::Line.new(input, 0, parser)
+      morphemes = Hyoki.string_to_morphemes(input, line, parser)
+      morphemes.map(&.surface).should eq ["わかり", "ませ", "ん", "。"]
+    end
+  end
+
+  describe ".yomi" do
+    it "returns yomi of the string" do
+      input = <<-EOS
+        日本語
+        EOS
+      Hyoki.yomi(input, Fucoidan::Fucoidan.new("-Oyomi")).should eq "ニホンゴ"
+    end
+  end
+
   describe "Morpheme" do
     describe "#surface" do
       it "returns surface" do
@@ -149,27 +170,6 @@ describe "Hyoki" do
           EOS
         lines = Hyoki::Document.new(input).lines
         lines.map { |l| [l.body, l.eol] }.should eq [["L1", "\n"], ["L2", nil]]
-      end
-    end
-
-    describe "#string_to_morphemes" do
-      it "converts string to morphemes" do
-        input = <<-EOS
-          わかりません。
-          EOS
-        parser = Fucoidan::Fucoidan.new
-        line = Hyoki::Document::Line.new(input, 0, parser)
-        morphemes = Hyoki.string_to_morphemes(input, line, parser)
-        morphemes.map(&.surface).should eq ["わかり", "ませ", "ん", "。"]
-      end
-    end
-
-    describe "#yomi" do
-      it "returns yomi of the string" do
-        input = <<-EOS
-          日本語
-          EOS
-        Hyoki.yomi(input, Fucoidan::Fucoidan.new("-Oyomi")).should eq "ニホンゴ"
       end
     end
 
