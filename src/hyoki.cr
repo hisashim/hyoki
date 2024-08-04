@@ -62,7 +62,7 @@ module Hyoki
     @max_index : Int32
     @source_string : String
     @line : Document::Line
-    @string_index : Int32
+    @index_in_source_string : Int32
 
     def initialize(node, index, max_index, source_string, line)
       @surface = node.surface
@@ -85,27 +85,27 @@ module Hyoki
       @max_index = max_index
       @source_string = source_string
       @line = line
-      @string_index = -100 # FIXME: kludge to pass typechecking
+      @index_in_source_string = -100 # FIXME: kludge to pass typechecking
     end
 
     getter :surface, :feature, :length, :rlength, :node_id, :rc_attr,
       :lc_attr, :posid, :char_type, :stat, :isbest, :alpha, :beta, :prob,
       :wcost, :cost, :index, :source_string, :line
 
-    def string_index
-      if @string_index >= 0 # FIXME: kludge to pass typechecking
-        @string_index
+    def index_in_source_string
+      if @index_in_source_string >= 0 # FIXME: kludge to pass typechecking
+        @index_in_source_string
       else
-        str_idxs = @line.surface_indexes(@surface)
-        str_len = @source_string.size
+        indexes = @line.surface_indexes(@surface)
+        source_length = @source_string.size
         # add 0.01 to avoid divide-by-zero error
-        str_idx_proportions = str_idxs.map { |str_idx| (str_idx.to_f / str_len) + 0.01 }
-        morpheme_idx_proportion = (@index.to_f / @max_index) + 0.01
-        str_idx_candidates =
-          str_idxs.zip(str_idx_proportions).sort_by { |_str_idx, str_idx_prop|
-            (str_idx_prop / morpheme_idx_proportion - 1.0).abs
+        index_proportions = indexes.map { |i| (i.to_f / source_length) + 0.01 }
+        morpheme_index_proportion = (@index.to_f / @max_index) + 0.01
+        index_candidates =
+          indexes.zip(index_proportions).sort_by { |_i, i_proportion|
+            (i_proportion / morpheme_index_proportion - 1.0).abs
           }
-        @string_index = str_idx_candidates.first.first # best guess
+        @index_in_source_string = index_candidates.first.first # best guess
       end
     end
   end
@@ -325,29 +325,29 @@ module Hyoki
 
     def excerpt(morpheme, context, color = nil)
       surface = morpheme.surface
-      string_index = morpheme.string_index
+      index = morpheme.index_in_source_string
       line_body = morpheme.line.body
       context_length_before, context_length_after =
         case context
         in Int32               then {context, context}
         in Tuple(Int32, Int32) then context
         end
-      leftmost = string_index - context_length_before
+      leftmost = index - context_length_before
 
       if color
         prefix =
           if leftmost.negative?
-            line_body[0, string_index]
+            line_body[0, index]
           else
             line_body[leftmost, context_length_before]
           end
         body = surface
-        suffix = line_body[(string_index + body.size), context_length_after]
+        suffix = line_body[(index + body.size), context_length_after]
         # 1: Bold, 4: Underline, 7: Invert, 0: Reset
         "#{prefix}\e[1;4;7m#{body}\e[0m#{suffix}"
       else
         if leftmost.negative?
-          line_body[0, (string_index + surface.size + context_length_after)]
+          line_body[0, (index + surface.size + context_length_after)]
         else
           line_body[leftmost, (context_length_before + surface.size + context_length_after)]
         end
@@ -365,7 +365,7 @@ module Hyoki
             relevant_morphemes.map { |m|
               source_name = m.line.source_name
               line_number = m.line.index + 1
-              character_number = m.string_index + 1
+              character_number = m.index_in_source_string + 1
               subcategory = yield m
               excerpt = excerpt(m, context, color)
               "    " +
@@ -385,7 +385,7 @@ module Hyoki
           relevant_morphemes.map { |m|
             source_name = m.line.source_name
             line_number = m.line.index + 1
-            character_number = m.string_index + 1
+            character_number = m.index_in_source_string + 1
             subcategory = yield m
             excerpt = excerpt(m, context, color)
             [category, source_name, line_number, character_number, subcategory, m.surface, excerpt]

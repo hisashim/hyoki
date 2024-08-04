@@ -71,16 +71,16 @@ describe "Hyoki" do
       end
     end
 
-    describe "#string_index" do
+    describe "#index_in_source_string" do
       it "returns the index of the surface as a substring in the source text" do
         input = <<-EOS
           する・しない・する・しない・する・しない
           そういうことが あるのだという。
           EOS
         lines = Hyoki::Document.new(input).lines
-        lines[0].morphemes[0].string_index.should eq 0
-        lines[0].morphemes[5].string_index.should eq 7
-        lines[0].morphemes[10].string_index.should eq 14
+        lines[0].morphemes[0].index_in_source_string.should eq 0
+        lines[0].morphemes[5].index_in_source_string.should eq 7
+        lines[0].morphemes[10].index_in_source_string.should eq 14
       end
 
       it "works correctly for very long input" do
@@ -88,9 +88,9 @@ describe "Hyoki" do
         # starts at input[1] because of the preceding space
         input = " " + ("0あ1い2う3え4お5か6き7く8け9こ" * 50)
         lines = Hyoki::Document.new(input).lines
-        lines[0].morphemes[0].string_index.should eq 1
-        lines[0].morphemes[100].string_index.should eq 101
-        lines[0].morphemes[990].string_index.should eq 991
+        lines[0].morphemes[0].index_in_source_string.should eq 1
+        lines[0].morphemes[100].index_in_source_string.should eq 101
+        lines[0].morphemes[990].index_in_source_string.should eq 991
       end
 
       it "handles empty input without problems" do
@@ -98,7 +98,7 @@ describe "Hyoki" do
           EOS
         Hyoki::Document.new(input).lines.each { |l|
           l.morphemes.each { |m|
-            substring_start = m.string_index
+            substring_start = m.index_in_source_string
             substring_length = m.surface.size
             substring = l.body[substring_start, substring_length]
             substring.should eq m.surface
