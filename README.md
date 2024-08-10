@@ -27,7 +27,7 @@ Options:
                                      Choose report type (default: variants)
     --report-format=text|tsv         Choose report format (default: text)
     --color=auto|always|never        Enable/disable excerpt highlighting (default: auto)
-    --context=N|N,M                  Set excerpt context to N (or preceding N and succeeding M) characters (default: 5)
+    --context-length=N|N,M           Set excerpt context length to N (or preceding N and succeeding M) characters (default: 5)
     --sort=alphabetical|appearance   Specify how report items should be sorted (default: alphabetical)
     --include-ascii=true|false       Specify whether to include ASCII-only items in the output (default: true)
     --mecab-dict-dir=DIR             Specify MeCab dictionary directory to use (e.g. /var/lib/mecab/dic/ipadic-utf8)

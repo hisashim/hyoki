@@ -323,14 +323,14 @@ module Hyoki
       end
     end
 
-    def excerpt(morpheme, context, color = nil)
+    def excerpt(morpheme, context_length, color = nil)
       surface = morpheme.surface
       index = morpheme.index_in_source_string
       line_body = morpheme.line.body
       context_length_before, context_length_after =
-        case context
-        in Int32               then {context, context}
-        in Tuple(Int32, Int32) then context
+        case context_length
+        in Int32               then {context_length, context_length}
+        in Tuple(Int32, Int32) then context_length
         end
       leftmost = index - context_length_before
 
@@ -354,7 +354,7 @@ module Hyoki
       end
     end
 
-    def items_to_text(items, context, color, &)
+    def items_to_text(items, context_length, color, &)
       report_items =
         items.map { |category, relevant_morphemes|
           subcategories = relevant_morphemes.map { |m| yield m }
@@ -367,7 +367,7 @@ module Hyoki
               line_number = m.line.index + 1
               character_number = m.index_in_source_string + 1
               subcategory = yield m
-              excerpt = excerpt(m, context, color)
+              excerpt = excerpt(m, context_length, color)
               "    " +
                 [source_name,
                  "L#{line_number}, C#{character_number}",
@@ -379,7 +379,7 @@ module Hyoki
       report_items.join("\n")
     end
 
-    def items_to_tsv(items, context, color, header, &)
+    def items_to_tsv(items, context_length, color, header, &)
       report_lines =
         items.map { |category, relevant_morphemes|
           relevant_morphemes.map { |m|
@@ -387,7 +387,7 @@ module Hyoki
             line_number = m.line.index + 1
             character_number = m.index_in_source_string + 1
             subcategory = yield m
-            excerpt = excerpt(m, context, color)
+            excerpt = excerpt(m, context_length, color)
             [category, source_name, line_number, character_number, subcategory, m.surface, excerpt]
               .map(&.to_s.gsub(TSV_ESCAPE_REGEX, TSV_ESCAPE)).join("\t")
           }
@@ -395,11 +395,11 @@ module Hyoki
       [header, report_lines.flatten.join("\n")].join("\n")
     end
 
-    def report_variants(format, context, sort, color, header, include_ascii)
+    def report_variants(format, context_length, sort, color, header, include_ascii)
       items = variants(@lines, @yomi_parser, sort, include_ascii)
       case format
       when :text
-        items_to_text(items, context, color) { |morpheme|
+        items_to_text(items, context_length, color) { |morpheme|
           surface = morpheme.surface
           if ASCII_WORD_REGEX.match surface
             # Kludge: For ASCII words, categorize subitems by surface as a
@@ -412,7 +412,7 @@ module Hyoki
           end
         }
       when :tsv
-        items_to_tsv(items, context, color, header: header) { |morpheme|
+        items_to_tsv(items, context_length, color, header: header) { |morpheme|
           surface = morpheme.surface
           if ASCII_WORD_REGEX.match surface
             surface
@@ -425,15 +425,15 @@ module Hyoki
       end
     end
 
-    def report_heteronyms(format, context, sort, color, header, include_ascii)
+    def report_heteronyms(format, context_length, sort, color, header, include_ascii)
       items = heteronyms(@lines, sort, include_ascii)
       case format
       when :text
-        items_to_text(items, context, color) { |morpheme|
+        items_to_text(items, context_length, color) { |morpheme|
           morpheme.feature.yomi # categorize subitems by yomi
         }
       when :tsv
-        items_to_tsv(items, context, color, header: header) { |morpheme|
+        items_to_tsv(items, context_length, color, header: header) { |morpheme|
           morpheme.feature.yomi # categorize subitems by yomi
         }
       else
@@ -441,30 +441,30 @@ module Hyoki
       end
     end
 
-    def report(type = :variants, format = :text, context = 5,
+    def report(type = :variants, format = :text, context_length = 5,
                sort = :alphabetical, color = false, header = nil,
                include_ascii = true)
       # FIXME: the application somehow slows down if we do not use
       # conditionals (case..when) and unify invocations of the same methods
-      # (e.g. report_variants(format, context, sort, color, header))
+      # (e.g. report_variants(format, context_length, sort, color, header))
       case type
       when :variants
         case format
         when :text
-          report_variants(format, context, sort, color, header, include_ascii)
+          report_variants(format, context_length, sort, color, header, include_ascii)
         when :tsv
           header ||= TSV_HEADER_VARIANTS
-          report_variants(format, context, sort, color, header, include_ascii)
+          report_variants(format, context_length, sort, color, header, include_ascii)
         else
           raise "Invalid report format: #{format.inspect}"
         end
       when :heteronyms
         case format
         when :text
-          report_heteronyms(format, context, sort, color, header, include_ascii)
+          report_heteronyms(format, context_length, sort, color, header, include_ascii)
         when :tsv
           header ||= TSV_HEADER_HETERONYMS
-          report_heteronyms(format, context, sort, color, header, include_ascii)
+          report_heteronyms(format, context_length, sort, color, header, include_ascii)
         else
           raise "Invalid report format: #{format.inspect}"
         end
@@ -479,13 +479,13 @@ module Hyoki
       report_type : Symbol,
       report_format : Symbol,
       color : Symbol,
-      context : Int32 | Tuple(Int32, Int32),
+      context_length : Int32 | Tuple(Int32, Int32),
       sort : Symbol,
       include_ascii : Bool,
       mecab_dict_dir : String | Nil,
       show_help : Bool,
       show_version : Bool do
-      setter :report_type, :report_format, :color, :context, :sort,
+      setter :report_type, :report_format, :color, :context_length, :sort,
         :include_ascii, :mecab_dict_dir, :show_help, :show_version
     end
 
@@ -494,7 +494,7 @@ module Hyoki
         report_type: :variants,
         report_format: :text,
         color: :auto,
-        context: 5,
+        context_length: 5,
         sort: :alphabetical,
         include_ascii: true,
         mecab_dict_dir: nil,
@@ -549,10 +549,10 @@ module Hyoki
             else               raise "Invalid value for color: #{s.inspect}"
             end
         }
-        o.on("--context=N|N,M", <<-EOS.chomp) { |s|
-          Set excerpt context to N (or preceding N and succeeding M) characters (default: #{c.context})
+        o.on("--context-length=N|N,M", <<-EOS.chomp) { |s|
+          Set excerpt context length to N (or preceding N and succeeding M) characters (default: #{c.context_length})
           EOS
-          c.context =
+          c.context_length =
             begin
               if s.includes? ","
                 Tuple(Int32, Int32).from(s.split(",").map &.to_i)
@@ -560,7 +560,7 @@ module Hyoki
                 s.to_i
               end
             rescue ex : ArgumentError
-              raise "Invalid value for context: #{ex.message}"
+              raise "Invalid value for context length: #{ex.message}"
             end
         }
         o.on("--sort=alphabetical|appearance", <<-EOS.chomp) { |s|
@@ -633,18 +633,18 @@ module Hyoki
         when :variants
           case format = c.report_format
           when :text
-            doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
+            doc.report(type: type, format: format, context_length: c.context_length, sort: c.sort, color: color, include_ascii: c.include_ascii)
           when :tsv
-            doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
+            doc.report(type: type, format: format, context_length: c.context_length, sort: c.sort, color: color, include_ascii: c.include_ascii)
           else
             raise "Invalid report format: #{format.inspect}"
           end
         when :heteronyms
           case format = c.report_format
           when :text
-            doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
+            doc.report(type: type, format: format, context_length: c.context_length, sort: c.sort, color: color, include_ascii: c.include_ascii)
           when :tsv
-            doc.report(type: type, format: format, context: c.context, sort: c.sort, color: color, include_ascii: c.include_ascii)
+            doc.report(type: type, format: format, context_length: c.context_length, sort: c.sort, color: color, include_ascii: c.include_ascii)
           else
             raise "Invalid report format: #{format.inspect}"
           end

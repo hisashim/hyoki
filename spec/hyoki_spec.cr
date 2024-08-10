@@ -190,13 +190,13 @@ describe "Hyoki" do
             そういうことがあるのだという。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(context: 0)
+          doc.report(context_length: 0)
             .should eq <<-EOS.chomp
               ## イウ: 言う (1) | いう (1)
                   L1, C12\t言う\t言っ
                   L2, C13\tいう\tいう
               EOS
-          doc.report(context: {3, 3})
+          doc.report(context_length: {3, 3})
             .should eq <<-EOS.chomp
               ## イウ: 言う (1) | いう (1)
                   L1, C12\t言う\t警官は言った。
@@ -384,12 +384,12 @@ describe "Hyoki" do
             そういうことがあるのだという。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv, context: 0).should eq <<-EOS.chomp
+          doc.report(format: :tsv, context_length: 0).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イウ\t\t1\t12\t言う\t言っ\t言っ
             イウ\t\t2\t13\tいう\tいう\tいう
             EOS
-          doc.report(format: :tsv, context: {3, 3}).should eq <<-EOS.chomp
+          doc.report(format: :tsv, context_length: {3, 3}).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イウ\t\t1\t12\t言う\t言っ\t警官は言った。
             イウ\t\t2\t13\tいう\tいう\tのだという。
