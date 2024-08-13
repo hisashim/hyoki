@@ -511,7 +511,7 @@ module Hyoki
 
       op = OptionParser.new do |o|
         o.banner = <<-EOS
-          Help finding variants in Japanese text
+          Hyoki helps finding variants in Japanese text
 
           Usage:
             #{PROGRAM_NAME} [OPTION]... [FILE]...

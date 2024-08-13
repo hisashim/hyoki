@@ -17,7 +17,7 @@ hyoki [OPTION]... [FILE]...
 Type `hyoki --help` to show command line options.
 
 ```
-Help finding variants in Japanese text
+Hyoki helps finding variants in Japanese text
 
 Usage:
   hyoki [OPTION]... [FILE]...
@@ -115,10 +115,10 @@ lexical form yomi       source  line    character       lexical form    surface 
 $
 ```
 
-**Skip ASCII-only words**: `--include-ascii=false` removes ASCII-only items from the output. This may help you when you are examining non-ASCII words within multilingual contents.
+**Include/exclude ASCII-only words**: `--include-ascii` option controls whether ASCII-only items should be included in the output or not. This may help you when you are examining non-ASCII words within multilingual contents.
 
 ```
-$ echo 'UNIXとUnix。思考と試行。' | hyoki | grep '^\*'
+$ echo 'UNIXとUnix。思考と試行。' | hyoki --include-ascii=true | grep '^\*'
 * unix: UNIX (1) | Unix (1)
 * シコウ: 思考 (1) | 試行 (1)
 $ echo 'UNIXとUnix。思考と試行。' | hyoki --include-ascii=false | grep '^\*'
