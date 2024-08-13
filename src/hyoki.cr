@@ -359,7 +359,7 @@ module Hyoki
         items.map { |category, relevant_morphemes|
           subcategories = relevant_morphemes.map { |m| yield m }
           item_heading =
-            "## #{category}: " +
+            "* #{category}: " +
               subcategories.tally.map { |h, count| "#{h} (#{count})" }.join(" | ")
           subitems =
             relevant_morphemes.map { |m|
@@ -368,7 +368,7 @@ module Hyoki
               character_number = m.index_in_source_string + 1
               subcategory = yield m
               excerpt = excerpt(m, context_length, color)
-              "    " +
+              "  - " +
                 [source_name,
                  "L#{line_number}, C#{character_number}",
                  subcategory,
