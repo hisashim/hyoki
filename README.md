@@ -40,33 +40,32 @@ Options:
 Hyoki suggests possible variants.
 
 ```
-$ echo "暖かい部屋で温かい食事をとる。" | hyoki
+$ echo "暖かい部屋で温かい食事をとる。" > test.txt
+$ hyoki test.txt
 * アタタカイ: 暖かい (1) | 温かい (1)
-  - -   L1, C1  暖かい  暖かい部屋で温か
-  - -   L1, C7  温かい  かい部屋で温かい食事をとる
+  - test.txt    L1, C1  暖かい  暖かい部屋で温か
+  - test.txt    L1, C7  温かい  かい部屋で温かい食事をとる
 $
 ```
 
 ```
-$ echo "人が云うには、彼がそう言ったのだという。" | hyoki
+$ echo "人が云うには、彼がそう言ったのだという。" > test.txt
+$ hyoki test.txt
 * イウ: 云う (1) | 言う (1) | いう (1)
-  - -   L1, C3  云う    人が云うには、彼が
-  - -   L1, C12 言う    、彼がそう言ったのだとい
-  - -   L1, C18 いう    ったのだという。
+  - test.txt    L1, C3  云う    人が云うには、彼が
+  - test.txt    L1, C12 言う    、彼がそう言ったのだとい
+  - test.txt    L1, C18 いう    ったのだという。
 $
 ```
 
 ```
-$ echo "行う（本則）・行なう（許容）" | hyoki
+$ echo "行う（本則）・行なう（許容）" > test.txt
+$ hyoki test.txt
 * オコナウ: 行う (1) | 行なう (1)
-  - -   L1, C1  行う    行う（本則）・
-  - -   L1, C8  行なう  （本則）・行なう（許容）
+  - test.txt    L1, C1  行う    行う（本則）・
+  - test.txt    L1, C8  行なう  （本則）・行なう（許容）
 $
 ```
-
-### More examples and tips
-
-**File names**: File names are displayed if they are provided as command line arguments. This can be useful when chapters or sections of the work are split into multiple files.
 
 ```
 $ echo "その区切り方のほうがいい。" > a.txt
@@ -81,32 +80,38 @@ $ hyoki a.txt b.txt
 $
 ```
 
+### More examples and tips
+
 **Heteronyms**: In addition to variants, it can suggest possible heteronyms (同綴異音異義語).
 
 ```
-$ echo "その区切り方のほうがいい。\nその区切りかたの方がいい。" | hyoki --report-type=variants
+$ echo "その区切り方のほうがいい。" > a.txt
+$ echo "その区切りかたの方がいい。" > b.txt
+$ hyoki --report-type=variants a.txt b.txt
 * カタ: 方 (1) | かた (1)
-  - -   L1, C6  方      その区切り方のほうがい
-  - -   L2, C6  かた    その区切りかたの方がいい
+  - a.txt       L1, C6  方      その区切り方のほうがい
+  - b.txt       L1, C6  かた    その区切りかたの方がいい
 * ホウ: ほう (1) | 方 (1)
-  - -   L1, C8  ほう    区切り方のほうがいい。
-  - -   L2, C9  方      切りかたの方がいい。
-$ echo "その区切り方のほうがいい。\nその区切りかたの方がいい。" | hyoki --report-type=heteronyms
+  - a.txt       L1, C8  ほう    区切り方のほうがいい。
+  - b.txt       L1, C9  方      切りかたの方がいい。
+$ hyoki --report-type=heteronyms a.txt b.txt
 * 方: カタ (1) | ホウ (1)
-  - -   L1, C6  カタ    その区切り方のほうがい
-  - -   L2, C9  ホウ    切りかたの方がいい。
+  - a.txt       L1, C6  カタ    その区切り方のほうがい
+  - b.txt       L1, C9  ホウ    切りかたの方がいい。
 $
 ```
 
 **TSV output**: It can print TSV for ease of further processing.
 
 ```
-$ echo "その区切り方のほうがいい。\nその区切りかたの方がいい。" | hyoki --output-format=tsv
+$ echo "その区切り方のほうがいい。" > a.txt
+$ echo "その区切りかたの方がいい。" > b.txt
+$ hyoki --report-format=tsv a.txt b.txt
 lexical form yomi       source  line    character       lexical form    surface excerpt
-カタ    -       1       6       方      方      その区切り方のほうがい
-カタ    -       2       6       かた    かた    その区切りかたの方がいい
-ホウ    -       1       8       ほう    ほう    区切り方のほうがいい。
-ホウ    -       2       9       方      方      切りかたの方がいい。
+カタ    a.txt   1       6       方      方      その区切り方のほうがい
+カタ    b.txt   1       6       かた    かた    その区切りかたの方がいい
+ホウ    a.txt   1       8       ほう    ほう    区切り方のほうがいい。
+ホウ    b.txt   1       9       方      方      切りかたの方がいい。
 $
 ```
 
