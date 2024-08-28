@@ -184,19 +184,19 @@ describe "Hyoki" do
             EOS
         end
 
-        it "returns report with specified length of context" do
+        it "returns report with specified length of excerpt context" do
           input = <<-EOS
             流れよわが涙、と警官は言った。
             そういうことがあるのだという。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(context_length: 0)
+          doc.report(excerpt_context_length: 0)
             .should eq <<-EOS.chomp
               * イウ: 言う (1) | いう (1)
                 - L1, C12\t言う\t言っ
                 - L2, C13\tいう\tいう
               EOS
-          doc.report(context_length: {3, 3})
+          doc.report(excerpt_context_length: {3, 3})
             .should eq <<-EOS.chomp
               * イウ: 言う (1) | いう (1)
                 - L1, C12\t言う\t警官は言った。
@@ -204,20 +204,20 @@ describe "Hyoki" do
               EOS
         end
 
-        it "returns report with highlighting when color is true" do
+        it "returns report with highlighting when highlight is true" do
           input = <<-EOS
             流れよわが涙、と警官は言った。
             そういうことがあるのだという。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(color: true).should eq <<-EOS.chomp
+          doc.report(highlight: true).should eq <<-EOS.chomp
             * イウ: 言う (1) | いう (1)
               - L1, C12\t言う\t、と警官は\e[1;4;7m言っ\e[0mた。
               - L2, C13\tいう\tあるのだと\e[1;4;7mいう\e[0m。
             EOS
         end
 
-        it "returns report on variants, without context if none" do
+        it "returns report on variants, without excerpt context if none" do
           input = <<-EOS
             志向
             思考
@@ -236,12 +236,12 @@ describe "Hyoki" do
             EOS
         end
 
-        it "returns report sorted when named arg sort is specified" do
+        it "returns report sorted when sort_order is specified" do
           input = <<-EOS
             思考と試行。意思と意志。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(sort: :alphabetical).should eq <<-EOS.chomp
+          doc.report(sort_order: :alphabetical).should eq <<-EOS.chomp
             * イシ: 意思 (1) | 意志 (1)
               - L1, C7\t意思\t考と試行。意思と意志。
               - L1, C10\t意志\t行。意思と意志。
@@ -249,7 +249,7 @@ describe "Hyoki" do
               - L1, C1\t思考\t思考と試行。意
               - L1, C4\t試行\t思考と試行。意思と意
             EOS
-          doc.report(sort: :appearance).should eq <<-EOS.chomp
+          doc.report(sort_order: :appearance).should eq <<-EOS.chomp
             * シコウ: 思考 (1) | 試行 (1)
               - L1, C1\t思考\t思考と試行。意
               - L1, C4\t試行\t思考と試行。意思と意
@@ -378,38 +378,38 @@ describe "Hyoki" do
             EOS
         end
 
-        it "returns report with specified length of context" do
+        it "returns report with specified length of excerpt context" do
           input = <<-EOS
             流れよわが涙、と警官は言った。
             そういうことがあるのだという。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv, context_length: 0).should eq <<-EOS.chomp
+          doc.report(format: :tsv, excerpt_context_length: 0).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イウ\t\t1\t12\t言う\t言っ\t言っ
             イウ\t\t2\t13\tいう\tいう\tいう
             EOS
-          doc.report(format: :tsv, context_length: {3, 3}).should eq <<-EOS.chomp
+          doc.report(format: :tsv, excerpt_context_length: {3, 3}).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イウ\t\t1\t12\t言う\t言っ\t警官は言った。
             イウ\t\t2\t13\tいう\tいう\tのだという。
             EOS
         end
 
-        it "returns report with highlighting when color is true" do
+        it "returns report with highlighting when highlight is true" do
           input = <<-EOS
             流れよわが涙、と警官は言った。
             そういうことがあるのだという。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv, color: true).should eq <<-EOS.chomp
+          doc.report(format: :tsv, highlight: true).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イウ\t\t1\t12\t言う\t言っ\t、と警官は\e[1;4;7m言っ\e[0mた。
             イウ\t\t2\t13\tいう\tいう\tあるのだと\e[1;4;7mいう\e[0m。
             EOS
         end
 
-        it "returns report on variants, without context if none" do
+        it "returns report on variants, without excerpt context if none" do
           input = <<-EOS
             志向
             思考
@@ -428,19 +428,19 @@ describe "Hyoki" do
             EOS
         end
 
-        it "returns report sorted when named arg sort is specified" do
+        it "returns report sorted when sort_order is specified" do
           input = <<-EOS
             思考と試行。意思と意志。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv, sort: :alphabetical).should eq <<-EOS.chomp
+          doc.report(format: :tsv, sort_order: :alphabetical).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イシ\t\t1\t7\t意思\t意思\t考と試行。意思と意志。
             イシ\t\t1\t10\t意志\t意志\t行。意思と意志。
             シコウ\t\t1\t1\t思考\t思考\t思考と試行。意
             シコウ\t\t1\t4\t試行\t試行\t思考と試行。意思と意
             EOS
-          doc.report(format: :tsv, sort: :appearance).should eq <<-EOS.chomp
+          doc.report(format: :tsv, sort_order: :appearance).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             シコウ\t\t1\t1\t思考\t思考\t思考と試行。意
             シコウ\t\t1\t4\t試行\t試行\t思考と試行。意思と意
