@@ -241,7 +241,7 @@ describe "Hyoki" do
             思考と試行。意思と意志。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(sort_order: :alphabetical).should eq <<-EOS.chomp
+          doc.report(sort_order: Hyoki::Document::SortOrder::Alphabetical).should eq <<-EOS.chomp
             * イシ: 意思 (1) | 意志 (1)
               - L1, C7\t意思\t考と試行。意思と意志。
               - L1, C10\t意志\t行。意思と意志。
@@ -249,7 +249,7 @@ describe "Hyoki" do
               - L1, C1\t思考\t思考と試行。意
               - L1, C4\t試行\t思考と試行。意思と意
             EOS
-          doc.report(sort_order: :appearance).should eq <<-EOS.chomp
+          doc.report(sort_order: Hyoki::Document::SortOrder::Appearance).should eq <<-EOS.chomp
             * シコウ: 思考 (1) | 試行 (1)
               - L1, C1\t思考\t思考と試行。意
               - L1, C4\t試行\t思考と試行。意思と意
@@ -339,7 +339,8 @@ describe "Hyoki" do
             UNIXとUnix。思考と試行。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv, include_ascii: false).should eq <<-EOS.chomp
+          doc.report(format: Hyoki::Document::ReportFormat::TSV,
+            include_ascii: false).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             シコウ\t\t1\t11\t思考\t思考\tUnix。思考と試行。
             シコウ\t\t1\t14\t試行\t試行\tx。思考と試行。
@@ -371,7 +372,7 @@ describe "Hyoki" do
             そういうことがあるのだという。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv).should eq <<-EOS.chomp
+          doc.report(format: Hyoki::Document::ReportFormat::TSV).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イウ\t\t1\t12\t言う\t言っ\t、と警官は言った。
             イウ\t\t2\t13\tいう\tいう\tあるのだという。
@@ -384,12 +385,12 @@ describe "Hyoki" do
             そういうことがあるのだという。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv, excerpt_context_length: 0).should eq <<-EOS.chomp
+          doc.report(format: Hyoki::Document::ReportFormat::TSV, excerpt_context_length: 0).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イウ\t\t1\t12\t言う\t言っ\t言っ
             イウ\t\t2\t13\tいう\tいう\tいう
             EOS
-          doc.report(format: :tsv, excerpt_context_length: {3, 3}).should eq <<-EOS.chomp
+          doc.report(format: Hyoki::Document::ReportFormat::TSV, excerpt_context_length: {3, 3}).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イウ\t\t1\t12\t言う\t言っ\t警官は言った。
             イウ\t\t2\t13\tいう\tいう\tのだという。
@@ -402,7 +403,7 @@ describe "Hyoki" do
             そういうことがあるのだという。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv, highlight: true).should eq <<-EOS.chomp
+          doc.report(format: Hyoki::Document::ReportFormat::TSV, highlight: true).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イウ\t\t1\t12\t言う\t言っ\t、と警官は\e[1;4;7m言っ\e[0mた。
             イウ\t\t2\t13\tいう\tいう\tあるのだと\e[1;4;7mいう\e[0m。
@@ -418,7 +419,7 @@ describe "Hyoki" do
             試行
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv).should eq <<-EOS.chomp
+          doc.report(format: Hyoki::Document::ReportFormat::TSV).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             シコウ\t\t1\t1\t志向\t志向\t志向
             シコウ\t\t2\t1\t思考\t思考\t思考
@@ -433,14 +434,16 @@ describe "Hyoki" do
             思考と試行。意思と意志。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv, sort_order: :alphabetical).should eq <<-EOS.chomp
+          doc.report(format: Hyoki::Document::ReportFormat::TSV,
+            sort_order: Hyoki::Document::SortOrder::Alphabetical).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イシ\t\t1\t7\t意思\t意思\t考と試行。意思と意志。
             イシ\t\t1\t10\t意志\t意志\t行。意思と意志。
             シコウ\t\t1\t1\t思考\t思考\t思考と試行。意
             シコウ\t\t1\t4\t試行\t試行\t思考と試行。意思と意
             EOS
-          doc.report(format: :tsv, sort_order: :appearance).should eq <<-EOS.chomp
+          doc.report(format: Hyoki::Document::ReportFormat::TSV,
+            sort_order: Hyoki::Document::SortOrder::Appearance).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             シコウ\t\t1\t1\t思考\t思考\t思考と試行。意
             シコウ\t\t1\t4\t試行\t試行\t思考と試行。意思と意
@@ -455,7 +458,7 @@ describe "Hyoki" do
             云う。言った。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv).should eq <<-EOS.chomp
+          doc.report(format: Hyoki::Document::ReportFormat::TSV).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イウ\t\t2\t1\t云う\t云う\t云う。言った。
             イウ\t\t2\t4\t言う\t言っ\t云う。言った。
@@ -471,7 +474,7 @@ describe "Hyoki" do
             UNIXとUnix。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv).should eq <<-EOS.chomp
+          doc.report(format: Hyoki::Document::ReportFormat::TSV).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             unix\t\t1\t1\tUNIX\tUNIX\tUNIXとUnix
             unix\t\t1\t6\tUnix\tUnix\tUNIXとUnix。
@@ -483,7 +486,7 @@ describe "Hyoki" do
             UNIXとUnix。Greyとgray。Colorとcolour。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(format: :tsv).should eq <<-EOS.chomp
+          doc.report(format: Hyoki::Document::ReportFormat::TSV).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             unix\t\t1\t1\tUNIX\tUNIX\tUNIXとUnix
             unix\t\t1\t6\tUnix\tUnix\tUNIXとUnix。Grey
@@ -500,7 +503,7 @@ describe "Hyoki" do
             files = sources.map { |s| File.tempfile(&.print(s)) }
               .map { |f| File.open(f.path) }
             doc = Hyoki::Document.new(files)
-            doc.report(format: :tsv).should eq <<-EOS.chomp
+            doc.report(format: Hyoki::Document::ReportFormat::TSV).should eq <<-EOS.chomp
               lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
               イウ\t#{files[0].path}\t1\t12\t言う\t言っ\t、と警官は言った。
               イウ\t#{files[1].path}\t1\t13\tいう\tいう\tあるのだという。
@@ -518,7 +521,7 @@ describe "Hyoki" do
               言われてみればそのとおりだ。
               EOS
             doc = Hyoki::Document.new(input)
-            doc.report(format: :tsv).should eq <<-EOS.chomp
+            doc.report(format: Hyoki::Document::ReportFormat::TSV).should eq <<-EOS.chomp
               lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
               イウ\t\t1\t12\t言う\t言っ\t、と警官は言った。
               イウ\t\t2\t13\tいう\tいう\tあるのだという。
@@ -535,7 +538,7 @@ describe "Hyoki" do
             その方がいいでしょう。そのほうがいいでしょう。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(type: :heteronyms).should eq <<-EOS.chomp
+          doc.report(type: Hyoki::Document::ReportType::Heteronyms).should eq <<-EOS.chomp
             * 方: カタ (1) | ホウ (1)
               - L1, C4\tカタ\t区切り方がわかりま
               - L2, C3\tホウ\tその方がいいでし
@@ -550,7 +553,8 @@ describe "Hyoki" do
             その方がいいでしょう。そのほうがいいでしょう。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(type: :heteronyms, format: :tsv).should eq <<-EOS.chomp
+          doc.report(type: Hyoki::Document::ReportType::Heteronyms,
+            format: Hyoki::Document::ReportFormat::TSV).should eq <<-EOS.chomp
             surface\tsource\tline\tcharacter\tyomi\tsurface\texcerpt
             方\t\t1\t4\tカタ\t方\t区切り方がわかりま
             方\t\t2\t3\tホウ\t方\tその方がいいでし
