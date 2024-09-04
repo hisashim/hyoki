@@ -25,7 +25,8 @@ Usage:
 Options:
     --report-type=variants|heteronyms
                                      Choose report type (default: variants)
-    --report-format=text|tsv         Choose report format (default: text)
+    --report-format=text|markdown|tsv
+                                     Choose report format (default: text)
     --highlight=auto|always|never    Enable/disable excerpt highlighting (default: auto)
     --excerpt-context-length=N|N,M   Set excerpt context length to N (or preceding N and succeeding M) characters (default: 5)
     --sort-order=alphabetical|appearance
@@ -99,6 +100,21 @@ $ hyoki --report-type=heteronyms a.txt b.txt
 * 方: カタ (1) | ホウ (1)
   - a.txt       L1, C6  カタ    その区切り方のほうがい
   - b.txt       L1, C9  ホウ    切りかたの方がいい。
+$
+```
+
+**Markdown output**: It can print brief Markdown that has less information but (hopefully) has better readability in non-tty environment.
+
+```
+$ echo "その区切り方のほうがいい。" > a.txt
+$ echo "その区切りかたの方がいい。" > b.txt
+$ hyoki --report-format=markdown a.txt b.txt
+* カタ: 方 (1) | かた (1)
+  - a.txt: `その区切り方のほうがい`
+  - b.txt: `その区切りかたの方がいい`
+* ホウ: ほう (1) | 方 (1)
+  - a.txt: `区切り方のほうがいい。`
+  - b.txt: `切りかたの方がいい。`
 $
 ```
 

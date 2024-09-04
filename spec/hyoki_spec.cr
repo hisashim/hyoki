@@ -365,6 +365,58 @@ describe "Hyoki" do
         end
       end
 
+      context "report type: variants, report format: markdown" do
+        it "returns report on variants in Markdown format" do
+          input = <<-EOS
+            流れよわが涙、と`警官`は言った。
+            そういうことがあるのだという。
+            EOS
+          doc = Hyoki::Document.new(input)
+          doc.report(format: Hyoki::Document::ReportFormat::Markdown).should eq <<-EOS.chomp
+            * イウ: 言う (1) | いう (1)
+              - `` `警官`は言った。 ``
+              - `あるのだという。`
+            EOS
+        end
+
+        context "input is from multiple files" do
+          it "shows corresponding source file names" do
+            sources = <<-EOS.lines(chomp: false)
+              流れよわが涙、と警官は言った。
+              そういうことがあるのだという。
+              言われてみればそのとおりだ。
+              EOS
+            files = sources.map { |s| File.tempfile(&.print(s)) }
+              .map { |f| File.open(f.path) }
+            doc = Hyoki::Document.new(files)
+            doc.report(format: Hyoki::Document::ReportFormat::Markdown).should eq <<-EOS.chomp
+              * イウ: 言う (2) | いう (1)
+                - #{files[0].path}: `、と警官は言った。`
+                - #{files[1].path}: `あるのだという。`
+                - #{files[2].path}: `言われてみれば`
+              EOS
+            files.each &.delete
+          end
+        end
+
+        context "input is from non-file stream (e.g. ARGF, STDIN)" do
+          it "omits source file names" do
+            input = <<-EOS
+              流れよわが涙、と警官は言った。
+              そういうことがあるのだという。
+              言われてみればそのとおりだ。
+              EOS
+            doc = Hyoki::Document.new(input)
+            doc.report(format: Hyoki::Document::ReportFormat::Markdown).should eq <<-EOS.chomp
+              * イウ: 言う (2) | いう (1)
+                - `、と警官は言った。`
+                - `あるのだという。`
+                - `言われてみれば`
+              EOS
+          end
+        end
+      end
+
       context "report type: variants, report format: tsv" do
         it "returns report in TSV format" do
           input = <<-EOS
@@ -542,6 +594,22 @@ describe "Hyoki" do
             * 方: カタ (1) | ホウ (1)
               - L1, C4\tカタ\t区切り方がわかりま
               - L2, C3\tホウ\tその方がいいでし
+            EOS
+        end
+      end
+
+      context "report type: heteronyms, report format: markdown" do
+        it "returns report on heteronyms in Markdown format" do
+          input = <<-EOS
+            区切り方がわかりません。区切りかたがわかりません。
+            その方がいいでしょう。そのほうがいいでしょう。
+            EOS
+          doc = Hyoki::Document.new(input)
+          doc.report(type: Hyoki::Document::ReportType::Heteronyms,
+            format: Hyoki::Document::ReportFormat::Markdown).should eq <<-EOS.chomp
+            * 方: カタ (1) | ホウ (1)
+              - `区切り方がわかりま`
+              - `その方がいいでし`
             EOS
         end
       end

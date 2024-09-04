@@ -163,6 +163,7 @@ module Hyoki
 
     enum ReportFormat
       Text
+      Markdown
       TSV
     end
 
@@ -390,6 +391,37 @@ module Hyoki
       report_items.join("\n")
     end
 
+    def markup_as_markdown_inline_code(string)
+      if string.match(/`/)
+        if string.starts_with?("`") || string.ends_with?("`")
+          "`` #{string} ``"
+        else
+          "``#{string}``"
+        end
+      else
+        "`#{string}`"
+      end
+    end
+
+    def items_to_markdown(items, excerpt_context_length, highlight, &)
+      report_items =
+        items.map { |category, relevant_morphemes|
+          subcategories = relevant_morphemes.map { |m| yield m }
+          item_heading =
+            "* #{category}: " +
+              subcategories.tally.map { |h, count| "#{h} (#{count})" }.join(" | ")
+          subitems =
+            relevant_morphemes.map { |m|
+              source_name = m.line.source_name
+              excerpt = excerpt(m, excerpt_context_length, highlight)
+              excerpt_md = "#{markup_as_markdown_inline_code(excerpt)}"
+              "  - " + [source_name, excerpt_md].compact.join(": ")
+            }
+          [item_heading, subitems.join("\n")].join("\n")
+        }
+      report_items.join("\n")
+    end
+
     def items_to_tsv(items, excerpt_context_length, highlight, header, &)
       report_lines =
         items.map { |category, relevant_morphemes|
@@ -422,6 +454,15 @@ module Hyoki
             morpheme.feature.lexical_form
           end
         }
+      in ReportFormat::Markdown
+        items_to_markdown(items, excerpt_context_length, highlight) { |morpheme|
+          surface = morpheme.surface
+          if ASCII_WORD_REGEX.match surface
+            surface
+          else
+            morpheme.feature.lexical_form
+          end
+        }
       in ReportFormat::TSV
         items_to_tsv(items, excerpt_context_length, highlight, header: header) { |morpheme|
           surface = morpheme.surface
@@ -441,6 +482,10 @@ module Hyoki
         items_to_text(items, excerpt_context_length, highlight) { |morpheme|
           morpheme.feature.yomi # categorize subitems by yomi
         }
+      in ReportFormat::Markdown
+        items_to_markdown(items, excerpt_context_length, highlight) { |morpheme|
+          morpheme.feature.yomi # categorize subitems by yomi
+        }
       in ReportFormat::TSV
         items_to_tsv(items, excerpt_context_length, highlight, header: header) { |morpheme|
           morpheme.feature.yomi # categorize subitems by yomi
@@ -458,6 +503,7 @@ module Hyoki
       in ReportType::Variants
         case format
         in ReportFormat::Text
+        in ReportFormat::Markdown
         in ReportFormat::TSV
           header ||= TSV_HEADER_VARIANTS
         end
@@ -465,6 +511,7 @@ module Hyoki
       in ReportType::Heteronyms
         case format
         in ReportFormat::Text
+        in ReportFormat::Markdown
         in ReportFormat::TSV
           header ||= TSV_HEADER_HETERONYMS
         end
@@ -533,14 +580,15 @@ module Hyoki
             else                   raise "Invalid report type: #{s.inspect}"
             end
         }
-        o.on("--report-format=text|tsv", <<-EOS.chomp) { |s|
+        o.on("--report-format=text|markdown|tsv", <<-EOS.chomp) { |s|
           Choose report format (default: #{c.report_format.to_s.downcase})
           EOS
           c.report_format =
             case s
-            when "text" then Document::ReportFormat::Text
-            when "tsv"  then Document::ReportFormat::TSV
-            else             raise "Invalid report format: #{s.inspect}"
+            when "text"     then Document::ReportFormat::Text
+            when "markdown" then Document::ReportFormat::Markdown
+            when "tsv"      then Document::ReportFormat::TSV
+            else                 raise "Invalid report format: #{s.inspect}"
             end
         }
         o.on("--highlight=auto|always|never", <<-EOS.chomp) { |s|
@@ -638,6 +686,7 @@ module Hyoki
            Document::ReportType::Heteronyms
           case format = c.report_format
           in Document::ReportFormat::Text,
+             Document::ReportFormat::Markdown,
              Document::ReportFormat::TSV
             doc.report(type: type, format: format,
               excerpt_context_length: c.excerpt_context_length,
