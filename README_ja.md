@@ -1,25 +1,25 @@
 # Hyoki
 
-  * [English](README.md) | [Japanese](README_ja.md)
+* [English](README.md) | [Japanese](README_ja.md)
 
-Hyoki helps authors and editors to find variants (異表記, 表記ゆれ) in Japanese language text.
+Hyokiは、日本語の文章の表記ゆれを見つけることを手助けするソフトウェアです。
 
-It shows words (morphemes) whose dictionary forms have the same yomi but have different representations, regardless of their meanings. It may make it easier to check variants, either intentional or unintentional.
+Hyokiは、読みが同一で表記が異なる語（実際には形態素）を一覧表示します。意図的な使い分けであるか、意図しない表記ゆれであるかを判断する能力はありませんが、表記の違いを確認する手助けになるかもしれません。
 
-## Usage
+## 使い方
 
-### Synopsis
+### 概要
 
 ```
 hyoki [OPTION]... [FILE]...
 ```
 
-### Options
+### オプション
 
-Type `hyoki --help` to show command line options.
+`hyoki --help`と入力すると、次のようにコマンドラインオプション等が表示されます。
 
 ```
-Hyoki helps finding variants in Japanese text
+Help finding variants in Japanese text
 
 Usage:
   hyoki [OPTION]... [FILE]...
@@ -39,9 +39,9 @@ Options:
     --version                        Show version
 ```
 
-### Examples
+### 実行例
 
-Hyoki suggests possible variants.
+Hyokiは表記ゆれの可能性がある候補を次のように提示します。
 
 ```
 $ echo "暖かい部屋で温かい食事をとる。" > test.txt
@@ -84,9 +84,9 @@ $ hyoki a.txt b.txt
 $
 ```
 
-### More examples and tips
+### さらなる実行例と利用上のヒント
 
-**Heteronyms**: In addition to variants, it can suggest possible heteronyms (同綴異音異義語).
+**同形異音異義語**: variants（異表記）だけでなく、heteronym（同綴異音異義語）の候補を提示することもできます。
 
 ```
 $ echo "その区切り方のほうがいい。" > a.txt
@@ -105,7 +105,7 @@ $ hyoki --report-type=heteronyms a.txt b.txt
 $
 ```
 
-**Markdown output**: It can print brief Markdown that has less information but (hopefully) has better readability in non-tty environment.
+**Markdown出力**: 簡単なMarkdown形式での出力も可能です。情報量が少なくなりますが、文字端末以外の環境では読みやすいかもしれません。
 
 ```
 $ echo "その区切り方のほうがいい。" > a.txt
@@ -120,7 +120,7 @@ $ hyoki --report-format=markdown a.txt b.txt
 $
 ```
 
-**TSV output**: It can print TSV for ease of further processing.
+**TSV出力**: タブ区切りテキスト（TSV）での出力も可能です。Hyokiの出力をさらに機械処理したい場合に役立つかもしれません。
 
 ```
 $ echo "その区切り方のほうがいい。" > a.txt
@@ -134,7 +134,7 @@ lexical form yomi       source  line    character       lexical form    surface 
 $
 ```
 
-**Include/exclude ASCII-only words**: `--include-ascii` option controls whether ASCII-only items should be included in the output or not. This may help you when you are examining non-ASCII words within multilingual contents.
+**ASCII文字からなる単語を出力しない**: `--include-ascii=false` オプションを使うと、ASCII文字だけからなる語を出力しなくなります。複数の言語が混在したテキストの中にある、非ASCIIな語句だけに注目している時に、役に立つかもしれません。
 
 ```
 $ echo 'UNIXとUnix。思考と試行。' | hyoki --include-ascii=true | grep '^\*'
@@ -145,7 +145,7 @@ $ echo 'UNIXとUnix。思考と試行。' | hyoki --include-ascii=false | grep '
 $
 ```
 
-**Tab width**: In text report format, fields are separated horizontally by tab characters, which may cause awkward appearance in some situations. It can be worked around by untabifying the output using utilities such like `expand` (included in GNU coreutils).
+**タブ幅**: text形式での出力中の行内の各フィールドは、タブ文字で区切られます。そのせいで出力が読みにくくなる場合があります。そういった場合は、`expand`などを使ってタブ文字を空白文字に展開すれば、読みやすくなるかもしれません（`expand`はGNU coreutilsに含まれています）。
 
 ```
 $ hyoki i_am_a_cat.txt
@@ -161,7 +161,7 @@ $ hyoki i_am_a_cat.txt | expand --tabs=10
 $
 ```
 
-## Installation
+## インストール方法
 
 ```
 $ git clone https://github.com/hisashim/hyoki.git && cd hyoki
@@ -171,19 +171,19 @@ $ sudo apt install mecab-ipadic-utf8
 $ cp bin/hyoki ~/bin/
 ```
 
-### Requirements
+### 必要なソフトウェア
 
-  * Runtime requirements:
-    - Unix-like operating system (Tested on Debian GNU/Linux)
+  * 実行するのに必要なもの:
+    - Unix系のOS（テストはDebian GNU/Linuxで行った）
     - libmecab2
-    - mecab-ipadic-utf8 or mecab-naist-jdic
-  * Build requirements:
-    - Unix-like operating system (Tested on Debian GNU/Linux)
+    - mecab-ipadic-utf8またはmecab-naist-jdic
+  * ビルドするのに必要なもの:
+    - Unix系のOS（テストはDebian GNU/Linuxで行った）
     - [Crystal](https://crystal-lang.org)
-    - Fucoidan (See [`shard.yml`](shard.yml))
+    - Fucoidan ([`shard.yml`](shard.yml)を参照)
     - libmecab-dev
 
-Note that older version of libmecab Debian packages may need some tweak. As of 0.996-14+b12, I took a workaround using private packages:
+注意: libmecab関連のDebianパッケージの古いバージョンを使う場合、少々調整を施す必要があるかもしれません。バージョン0.996-14+b12では、筆者は次のようにプライベートなパッケージを使って問題を回避しました:
 
 ```
 $ mkdir workdir && cd workdir
@@ -201,16 +201,17 @@ $ dpkg-buildpackage -b -rfakeroot -us -uc
 $ sudo dpkg --install ../libmecab-dev_*.deb ../libmecab2_*.deb
 ```
 
-(See [#1024618 - libmecab-dev: mecab-config --dicdir prints wrong directory](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1024618).)
+（参考: [#1024618 - libmecab-dev: mecab-config --dicdir prints wrong directory](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1024618)）
 
-## Notes
 
-### Limitations and known problems
+## 備考
 
-  * It can not detect “variants” with different yomi in dictionary forms, e.g.:
-    - サーバ and サーバー
-    - 1つ and 一つ
-    - 誤り and 謝る:
+### 制限事項と既知の問題
+
+  * 正規化すると読みが同一でなくなるような語句については、Hyokiは異表記に気づくことができない。具体例:
+    - サーバ と サーバー
+    - 1つ と 一つ
+    - 誤り と 謝る:
       ```
       $ echo "誤りがあった。謝りがあった。" | hyoki
       $ echo "誤りがあった。謝りがあった。" | mecab
@@ -220,35 +221,35 @@ $ sudo dpkg --install ../libmecab-dev_*.deb ../libmecab2_*.deb
       ...
       $
       ```
-  * Results may be incorrect. Most likely because of bugs, and possibly because this software is based on probabilistic inference.
-  * Input text must be UTF-8/LF.
-  * MeCab dictionary must be encoded in UTF-8.
+  * 出力結果が正しいとは限らない。おおかたバグのせいだが、このツールが確率的な推論に基づいていることが原因であるケースもあるかもしれない。
+  * 入力テキストはUTF-8/LFでなければならない。
+  * MeCab辞書のエンコーディングはUTF-8でなければならない。
 
-For serious purposes, please use professionally developed production-ready tools.
+仕事や真剣な用途には、プロが開発した業務用のツールを使ってください。
 
-### Motivation
+### 開発の動機
 
-This software was written as a simple proof-of-concept to see if and how situational applications can aid authors.
+このソフトウェアは、situational application（ソフトウェア開発の専門家ではない人が、現場の状況に合わせて間に合わせで作ったアプリケーション）が著者を支援できるかを考えるための、簡単な試作品（proof-of-concept）として作られました。
 
-### See also
+### 資料
 
-The following may be of your interest.
+関心がある方のために資料を挙げておきます。
 
-  * [Just Right!](https://www.justsystems.com/jp/products/justright/): A commercial copyediting helper software for Japanese language, with features to find variants.
-  * [Report on Iji-doukun Usage Examples](https://www.bunka.go.jp/seisaku/bunkashingikai/kokugo/hokoku/pdf/ijidokun_140221.pdf) (Agency for Cultural Affairs, 2014) (Japanese): Examples and usage suggestions of iji-doukun (different kanji characters for same reading).
+  * [Just Right!](https://www.justsystems.com/jp/products/justright/): 日本語の文章の校正を支援してくれる商用ソフトウェア製品。表記ゆれを検出する機能を備えている。
+  * [「異字同訓」の漢字の使い分け例（報告）](https://www.bunka.go.jp/seisaku/bunkashingikai/kokugo/hokoku/pdf/ijidokun_140221.pdf)（文化庁，2014）: 異字同訓の用例。
 
-## License
+## ライセンス
 
-This software is distributed under the terms of the [MIT license](LICENSE).
+このソフトウェアは[MIT license](LICENSE)のもとで公開されています。
 
-## Acknowledgments
+## 謝辞
 
-Many thanks to:
+次の方々に深く感謝します:
 
-  * Taku Kudo (MeCab author)
-  * lpm11 (mecab and fucoidan shards author)
-  * Crystal and its community
+  * Taku Kudo（MeCab作者）
+  * lpm11（mecab shardとfucoidan shardの作者）
+  * Crystalとそのコミュニティ
 
-## Contributors
+## 貢献者
 
   * [Hisashi Morita](https://github.com/hisashim) - creator and maintainer
