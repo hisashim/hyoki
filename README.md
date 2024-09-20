@@ -143,7 +143,7 @@ $ echo 'UNIXとUnix。思考と試行。' | hyoki --include-ascii=false | grep '
 $
 ```
 
-**Tab width**: Fields are separated horizontally by tab characters, which may cause awkward appearance in some situations. It can be worked around by untabifying the output using utilities such like `expand` (included in GNU coreutils).
+**Tab width**: In text report format, fields are separated horizontally by tab characters, which may cause awkward appearance in some situations. It can be worked around by untabifying the output using utilities such like `expand` (included in GNU coreutils).
 
 ```
 $ hyoki i_am_a_cat.txt
@@ -233,6 +233,7 @@ This software was written as a simple proof-of-concept to see if and how situati
 The following may be of your interest.
 
   * [Just Right!](https://www.justsystems.com/jp/products/justright/): A commercial copyediting helper software for Japanese language, with features to find variants.
+  * [Report on Iji-doukun Usage Examples](https://www.bunka.go.jp/seisaku/bunkashingikai/kokugo/hokoku/pdf/ijidokun_140221.pdf) (Agency for Cultural Affairs, 2014) (Japanese): Examples and usage suggestions of iji-doukun (different kanji characters for same reading).
 
 ## License
 
