@@ -31,4 +31,4 @@ mostlyclean:
 clean: mostlyclean
 	rm -fr lib/
 
-.PHONY: all check spec formatcheck shardscheck docs mostlyclean clean
+.PHONY: all check spec formatcheck shardscheck docs build mostlyclean clean
