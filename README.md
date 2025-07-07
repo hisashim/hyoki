@@ -183,7 +183,7 @@ $ cp bin/hyoki ~/bin/
     - Fucoidan (See [`shard.yml`](shard.yml))
     - libmecab-dev
 
-Note that older version of libmecab Debian packages may need some tweak. As of 0.996-14+b12, I took a workaround using private packages:
+Note that older version of libmecab Debian packages may need some tweak. As to 0.996-14 and 0.996-15, I took a workaround using private packages:
 
 ```
 $ mkdir workdir && cd workdir
@@ -198,7 +198,7 @@ dpkg-checkbuilddeps: error: Unmet build dependencies: ...
 $ sudo apt install ...
 $ dpkg-buildpackage -b -rfakeroot -us -uc
 ...
-$ sudo dpkg --install ../libmecab-dev_*.deb ../libmecab2_*.deb
+$ sudo dpkg --install ../libmecab-dev_0.996-15+hisashim1_amd64.deb ../libmecab2_0.996-15+hisashim1_amd64.deb
 ```
 
 (See [#1024618 - libmecab-dev: mecab-config --dicdir prints wrong directory](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1024618).)
