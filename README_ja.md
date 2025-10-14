@@ -1,6 +1,6 @@
 # Hyoki
 
-* [English](README.md) | [Japanese](README_ja.md)
+  * [English](README.md) | [Japanese](README_ja.md)
 
 Hyokiは、日本語の文章の表記ゆれを見つけることを手助けするソフトウェアです。
 
@@ -202,7 +202,6 @@ $ sudo dpkg --install ../libmecab-dev_0.996-15+hisashim1_amd64.deb ../libmecab2_
 ```
 
 （参考: [#1024618 - libmecab-dev: mecab-config --dicdir prints wrong directory](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1024618)）
-
 
 ## 備考
 
