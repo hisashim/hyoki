@@ -12,6 +12,7 @@ _hyoki_completions()
     --excerpt-context-length \
     --sort-order \
     --include-ascii \
+    --pager \
     --mecab-dict-dir \
     --help \
     --version\
@@ -41,6 +42,10 @@ _hyoki_completions()
       ;;
     --include-ascii)
       COMPREPLY=( $(compgen -W 'true false' -- "${cur}") )
+      return 0
+      ;;
+    --pager)
+      COMPREPLY=( $(compgen -W '' -- "${cur}") )
       return 0
       ;;
     --mecab-dict-dir)

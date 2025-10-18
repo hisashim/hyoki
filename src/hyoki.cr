@@ -534,11 +534,12 @@ module Hyoki
       excerpt_context_length : Int32 | Tuple(Int32, Int32),
       sort_order : Document::SortOrder,
       include_ascii : Bool,
+      pager : String?,
       mecab_dict_dir : String | Nil,
       show_help : Bool,
       show_version : Bool do
       setter :report_type, :report_format, :highlight, :excerpt_context_length,
-        :sort_order, :include_ascii, :mecab_dict_dir, :show_help, :show_version
+        :sort_order, :include_ascii, :pager, :mecab_dict_dir, :show_help, :show_version
     end
 
     DEFAULT_CONFIG =
@@ -549,6 +550,7 @@ module Hyoki
         excerpt_context_length: 5,
         sort_order: Document::SortOrder::Alphabetical,
         include_ascii: true,
+        pager: nil,
         mecab_dict_dir: nil,
         show_help: false,
         show_version: false
@@ -556,6 +558,16 @@ module Hyoki
 
     def self.puts_or_print(string)
       STDOUT.tty? ? puts(string) : print(string)
+    end
+
+    def self.puts_or_write_to_pager(report, pager)
+      if STDOUT.tty? && pager && !pager.empty?
+        cmd, *args = pager.split
+        Process.run(cmd, args,
+          input: IO::Memory.new(report), output: STDOUT, error: STDERR)
+      else
+        puts report
+      end
     end
 
     def self.run
@@ -638,6 +650,12 @@ module Hyoki
             else              raise "Invalid value for include_ascii: #{s.inspect}"
             end
         }
+        o.on("--pager=PAGER", <<-EOS.chomp) { |s|
+          Specify pager \
+          (default: #{c.pager.to_s.inspect}, falls back to $HYOKI_PAGER or $PAGER)
+          EOS
+          c.pager = s if s && !s.empty?
+        }
         o.on("--mecab-dict-dir=DIR", <<-EOS.chomp) { |s|
           Specify MeCab dictionary directory to use \
           (e.g. /var/lib/mecab/dic/ipadic-utf8)
@@ -698,7 +716,15 @@ module Hyoki
 
       # FIXME: Avoid `Broken pipe (IO::Error)` when piped to a pager.
       # (See https://github.com/crystal-lang/crystal/issues/7810 .)
-      puts report unless report.empty?
+      if !report.empty?
+        pager =
+          case
+          when (s = c.pager) && !s.empty?             then s
+          when (s = ENV["HYOKI_PAGER"]?) && !s.empty? then s
+          when (s = ENV["PAGER"]?) && !s.empty?       then s
+          end
+        puts_or_write_to_pager(report, pager)
+      end
     end
   end
 end

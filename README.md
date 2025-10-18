@@ -34,6 +34,7 @@ Options:
     --sort-order=alphabetical|appearance
                                      Specify how report items should be sorted (default: alphabetical)
     --include-ascii=true|false       Specify whether to include ASCII-only items in the output (default: true)
+    --pager=PAGER                    Specify pager (default: "", falls back to $HYOKI_PAGER or $PAGER)
     --mecab-dict-dir=DIR             Specify MeCab dictionary directory to use (e.g. /var/lib/mecab/dic/ipadic-utf8)
     --help                           Show help message
     --version                        Show version

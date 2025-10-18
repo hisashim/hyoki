@@ -21,6 +21,7 @@ _hyoki() {
     '--excerpt-context-length=[Set excerpt context length]:excerpt_context_length:'
     '--sort-order=[Specify how report items should be sorted]:sort_order:(alphabetical appearance)'
     '--include-ascii=[Specify whether to include ASCII-only items in the output]:include_ascii:(true false)'
+    '--pager=[Specify pager]:pager:'
     '--mecab-dict-dir=[Specify MeCab dictionary directory to use]:mecab_dict_dir:_dir_list'
     '(- *)--help[Show help message]'
     '(- *)--version[Show version]'
