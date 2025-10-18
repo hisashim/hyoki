@@ -175,12 +175,12 @@ module Hyoki
     struct Line
       @source_string : String
       @body : String
-      @eol : String | Nil
+      @eol : String?
       @index : Int32
-      @morphemes : Array(Morpheme) | Nil
+      @morphemes : Array(Morpheme)?
       @surface_indexes : Hash(String, Array(Int32))
       @parser : Fucoidan::Fucoidan
-      @source_name : String | Nil
+      @source_name : String?
 
       def initialize(source_string, index, parser, source_io = nil)
         mds = source_string.scan(LINE_REGEX)
@@ -535,7 +535,7 @@ module Hyoki
       sort_order : Document::SortOrder,
       include_ascii : Bool,
       pager : String?,
-      mecab_dict_dir : String | Nil,
+      mecab_dict_dir : String?,
       show_help : Bool,
       show_version : Bool do
       setter :report_type, :report_format, :highlight, :excerpt_context_length,
