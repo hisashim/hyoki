@@ -4,6 +4,8 @@
 
 Hyoki helps authors and editors to find variants (異表記, 表記ゆれ) in Japanese language text.
 
+![screenshot](screenshot.png)
+
 It shows words (morphemes) whose dictionary forms have the same yomi but have different representations, regardless of their meanings. It may make it easier to check variants, either intentional or unintentional.
 
 ## Usage
