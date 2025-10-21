@@ -13,7 +13,7 @@ Hyokiは、読みが同一で表記が異なる語（実際には形態素）を
 ### 概要
 
 ```
-hyoki [OPTION]... [FILE]...
+hyoki [OPTIONS]... [FILE]...
 ```
 
 ### オプション
@@ -24,7 +24,7 @@ hyoki [OPTION]... [FILE]...
 Hyoki helps finding variants in Japanese text
 
 Usage:
-  hyoki [OPTION]... [FILE]...
+  hyoki [OPTIONS]... [FILE]...
 
 Options:
     --report-type=variants|heteronyms

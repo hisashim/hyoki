@@ -578,7 +578,7 @@ module Hyoki
           Hyoki helps finding variants in Japanese text
 
           Usage:
-            #{PROGRAM_NAME} [OPTION]... [FILE]...
+            #{PROGRAM_NAME} [OPTIONS]... [FILE]...
 
           Options:
           EOS

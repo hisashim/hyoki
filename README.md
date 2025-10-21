@@ -13,7 +13,7 @@ It shows words (morphemes) whose dictionary forms have the same yomi but have di
 ### Synopsis
 
 ```
-hyoki [OPTION]... [FILE]...
+hyoki [OPTIONS]... [FILE]...
 ```
 
 ### Options
@@ -24,7 +24,7 @@ Type `hyoki --help` to show command line options.
 Hyoki helps finding variants in Japanese text
 
 Usage:
-  hyoki [OPTION]... [FILE]...
+  hyoki [OPTIONS]... [FILE]...
 
 Options:
     --report-type=variants|heteronyms
