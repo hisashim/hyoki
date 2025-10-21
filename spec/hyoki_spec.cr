@@ -302,12 +302,12 @@ describe "Hyoki" do
             EOS
         end
 
-        it "excludes ASCII-only words if include_ascii is false" do
+        it "excludes ASCII-only words if exclude_ascii_only_items is true" do
           input = <<-EOS
             UNIXとUnix。思考と試行。
             EOS
           doc = Hyoki::Document.new(input)
-          doc.report(include_ascii: false).should eq <<-EOS.chomp
+          doc.report(exclude_ascii_only_items: true).should eq <<-EOS.chomp
             * シコウ: 思考 (1) | 試行 (1)
               - L1, C11\t思考\tUnix。思考と試行。
               - L1, C14\t試行\tx。思考と試行。
@@ -334,13 +334,13 @@ describe "Hyoki" do
           end
         end
 
-        it "excludes ASCII-only words if include_ascii is false" do
+        it "excludes ASCII-only words if exclude_ascii_only_items is true" do
           input = <<-EOS
             UNIXとUnix。思考と試行。
             EOS
           doc = Hyoki::Document.new(input)
           doc.report(format: Hyoki::Document::ReportFormat::TSV,
-            include_ascii: false).should eq <<-EOS.chomp
+            exclude_ascii_only_items: true).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             シコウ\t\t1\t11\t思考\t思考\tUnix。思考と試行。
             シコウ\t\t1\t14\t試行\t試行\tx。思考と試行。

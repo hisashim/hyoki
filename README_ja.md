@@ -35,7 +35,8 @@ Options:
     --excerpt-context-length=N|N,M   Set excerpt context length to N (or preceding N and succeeding M) characters (default: 5)
     --sort-order=alphabetical|appearance
                                      Specify how report items should be sorted (default: alphabetical)
-    --include-ascii=true|false       Specify whether to include ASCII-only items in the output (default: true)
+    --exclude-ascii-only-items=true|false
+                                     Specify whether to exclude ASCII-only items in the output (default: false)
     --pager=PAGER                    Specify pager (default: "", falls back to $HYOKI_PAGER or $PAGER)
     --mecab-dict-dir=DIR             Specify MeCab dictionary directory to use (e.g. /var/lib/mecab/dic/ipadic-utf8)
     --help                           Show help message
@@ -137,13 +138,13 @@ lexical form yomi       source  line    character       lexical form    surface 
 $
 ```
 
-**ASCII文字からなる単語を出力しない**: `--include-ascii=false` オプションを使うと、ASCII文字だけからなる語を出力しなくなります。複数の言語が混在したテキストの中にある、非ASCIIな語句だけに注目している時に、役に立つかもしれません。
+**ASCII文字からなる単語を出力しない**: `--exclude-ascii-only-items=true` オプションを使うと、ASCII文字だけからなる語を出力しなくなります。複数の言語が混在したテキストの中にある、非ASCIIな語句だけに注目している時に、役に立つかもしれません。
 
 ```
-$ echo 'UNIXとUnix。思考と試行。' | hyoki --include-ascii=true | grep '^\*'
+$ echo 'UNIXとUnix。思考と試行。' | hyoki --exclude-ascii-only-items=false | grep '^\*'
 * unix: UNIX (1) | Unix (1)
 * シコウ: 思考 (1) | 試行 (1)
-$ echo 'UNIXとUnix。思考と試行。' | hyoki --include-ascii=false | grep '^\*'
+$ echo 'UNIXとUnix。思考と試行。' | hyoki --exclude-ascii-only-items=true | grep '^\*'
 * シコウ: 思考 (1) | 試行 (1)
 $
 ```

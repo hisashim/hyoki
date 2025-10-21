@@ -253,7 +253,7 @@ module Hyoki
 
     # Returns an associative list of yomi (of dictionary form) to
     # variants: words with same pronunciation and different spelling.
-    def variants(lines, yomi_parser, sort_order, include_ascii) : ReportItems
+    def variants(lines, yomi_parser, sort_order, exclude_ascii_only_items) : ReportItems
       morphemes_by_lexical_form_yomi =
         lines.flat_map(&.morphemes).group_by { |m|
           # Group morphemes by yomi of lexical form.
@@ -261,7 +261,7 @@ module Hyoki
           #     can be used as yomi of lexical form.
           #   * Otherwise (when surface differs from lexical form because of
           #     conjugation and such), we try to guess yomi of lexical form.
-          #   * Kludge: For ASCII words, we use downcased surface as a
+          #   * Kludge: For ASCII-only words, we use downcased surface as a
           #     substitute of yomi.
           surface = m.surface
           lexical_form = m.feature.lexical_form
@@ -279,7 +279,7 @@ module Hyoki
           morphemes_of_same_lfyomi.map { |m|
             surface = m.surface
             if ASCII_WORD_REGEX.match surface
-              # Kludge: For ASCII words, use surface as a substitute of
+              # Kludge: For ASCII-only words, use surface as a substitute of
               # lexical form.
               surface
             else
@@ -289,7 +289,7 @@ module Hyoki
         }
 
       # exclude ASCII-only items if specified such.
-      if include_ascii == false
+      if exclude_ascii_only_items == true
         lexical_form_yomi_to_variants.reject! { |key, _morphemes|
           ASCII_WORD_REGEX.match(key)
         }
@@ -307,7 +307,7 @@ module Hyoki
 
     # Returns an associative list of surface expression to heteronyms: words
     # with same spelling and different pronunciation.
-    def heteronyms(lines, sort_order, include_ascii) : ReportItems
+    def heteronyms(lines, sort_order, exclude_ascii_only_items) : ReportItems
       morphemes_by_surface =
         lines.flat_map(&.morphemes).group_by { |m|
           # group morphemes by surface expression
@@ -319,7 +319,7 @@ module Hyoki
         }
 
       # exclude ASCII-only items if specified such.
-      if include_ascii == false
+      if exclude_ascii_only_items == true
         surface_to_heteronyms.reject! { |key, _morphemes|
           ASCII_WORD_REGEX.match(key)
         }
@@ -438,14 +438,14 @@ module Hyoki
       [header, report_lines.flatten.join("\n")].join("\n")
     end
 
-    def report_variants(format, excerpt_context_length, sort_order, highlight, header, include_ascii)
-      items = variants(@lines, @yomi_parser, sort_order, include_ascii)
+    def report_variants(format, excerpt_context_length, sort_order, highlight, header, exclude_ascii_only_items)
+      items = variants(@lines, @yomi_parser, sort_order, exclude_ascii_only_items)
       case format
       in ReportFormat::Text
         items_to_text(items, excerpt_context_length, highlight) { |morpheme|
           surface = morpheme.surface
           if ASCII_WORD_REGEX.match surface
-            # Kludge: For ASCII words, categorize subitems by surface as a
+            # Kludge: For ASCII-only words, categorize subitems by surface as a
             # substitute of its dictionary form.
             # TODO: Acquire dictionary forms of foreign words somehow.
             surface
@@ -475,8 +475,8 @@ module Hyoki
       end
     end
 
-    def report_heteronyms(format, excerpt_context_length, sort_order, highlight, header, include_ascii)
-      items = heteronyms(@lines, sort_order, include_ascii)
+    def report_heteronyms(format, excerpt_context_length, sort_order, highlight, header, exclude_ascii_only_items)
+      items = heteronyms(@lines, sort_order, exclude_ascii_only_items)
       case format
       in ReportFormat::Text
         items_to_text(items, excerpt_context_length, highlight) { |morpheme|
@@ -495,7 +495,7 @@ module Hyoki
 
     def report(type = ReportType::Variants, format = ReportFormat::Text,
                excerpt_context_length = 5, sort_order = SortOrder::Alphabetical,
-               highlight = false, header = nil, include_ascii = true)
+               highlight = false, header = nil, exclude_ascii_only_items = false)
       # FIXME: the application somehow slows down if we do not use
       # conditionals (case..when) and unify invocations of the same methods
       # (e.g. report_variants(format, excerpt_context_length, sort_order, highlight, header))
@@ -507,7 +507,7 @@ module Hyoki
         in ReportFormat::TSV
           header ||= TSV_HEADER_VARIANTS
         end
-        report_variants(format, excerpt_context_length, sort_order, highlight, header, include_ascii)
+        report_variants(format, excerpt_context_length, sort_order, highlight, header, exclude_ascii_only_items)
       in ReportType::Heteronyms
         case format
         in ReportFormat::Text
@@ -515,7 +515,7 @@ module Hyoki
         in ReportFormat::TSV
           header ||= TSV_HEADER_HETERONYMS
         end
-        report_heteronyms(format, excerpt_context_length, sort_order, highlight, header, include_ascii)
+        report_heteronyms(format, excerpt_context_length, sort_order, highlight, header, exclude_ascii_only_items)
       end
     end
   end
@@ -533,13 +533,13 @@ module Hyoki
       highlight : Highlight,
       excerpt_context_length : Int32 | Tuple(Int32, Int32),
       sort_order : Document::SortOrder,
-      include_ascii : Bool,
+      exclude_ascii_only_items : Bool,
       pager : String?,
       mecab_dict_dir : String?,
       show_help : Bool,
       show_version : Bool do
       setter :report_type, :report_format, :highlight, :excerpt_context_length,
-        :sort_order, :include_ascii, :pager, :mecab_dict_dir, :show_help, :show_version
+        :sort_order, :exclude_ascii_only_items, :pager, :mecab_dict_dir, :show_help, :show_version
     end
 
     DEFAULT_CONFIG =
@@ -549,7 +549,7 @@ module Hyoki
         highlight: Highlight::Auto,
         excerpt_context_length: 5,
         sort_order: Document::SortOrder::Alphabetical,
-        include_ascii: true,
+        exclude_ascii_only_items: false,
         pager: nil,
         mecab_dict_dir: nil,
         show_help: false,
@@ -639,15 +639,15 @@ module Hyoki
             else                     raise "Invalid value for sort_order: #{s.inspect}"
             end
         }
-        o.on("--include-ascii=true|false", <<-EOS.chomp) { |s|
-          Specify whether to include ASCII-only items in the output \
-          (default: #{c.include_ascii})
+        o.on("--exclude-ascii-only-items=true|false", <<-EOS.chomp) { |s|
+          Specify whether to exclude ASCII-only items in the output \
+          (default: #{c.exclude_ascii_only_items})
           EOS
-          c.include_ascii =
+          c.exclude_ascii_only_items =
             case s
             when "true"  then true
             when "false" then false
-            else              raise "Invalid value for include_ascii: #{s.inspect}"
+            else              raise "Invalid value for exclude_ascii_only_items: #{s.inspect}"
             end
         }
         o.on("--pager=PAGER", <<-EOS.chomp) { |s|
@@ -710,7 +710,7 @@ module Hyoki
               excerpt_context_length: c.excerpt_context_length,
               sort_order: c.sort_order,
               highlight: highlight,
-              include_ascii: c.include_ascii)
+              exclude_ascii_only_items: c.exclude_ascii_only_items)
           end
         end
 
