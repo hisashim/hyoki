@@ -211,7 +211,7 @@ $ sudo dpkg --install ../libmecab-dev_0.996-15+hisashim1_amd64.deb ../libmecab2_
 
 ```
 $ sudo sed -i.bak \
-  "s/\${prefix}\/lib\/x86_64-linux-gnu\/mecab\/dic/\/var\/lib\/mecab\/dic/" \
+  "s|\${prefix}/lib/x86_64-linux-gnu/mecab/dic|/var/lib/mecab/dic|" \
   /usr/bin/mecab-config
 $ diff -u /usr/bin/mecab-config.bak /usr/bin/mecab-config
 --- /usr/bin/mecab-config.bak

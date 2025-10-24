@@ -211,7 +211,7 @@ Alternatively, you can just edit `/usr/bin/mecab-config` directly, e.g.:
 
 ```
 $ sudo sed -i.bak \
-  "s/\${prefix}\/lib\/x86_64-linux-gnu\/mecab\/dic/\/var\/lib\/mecab\/dic/" \
+  "s|\${prefix}/lib/x86_64-linux-gnu/mecab/dic|/var/lib/mecab/dic|" \
   /usr/bin/mecab-config
 $ diff -u /usr/bin/mecab-config.bak /usr/bin/mecab-config
 --- /usr/bin/mecab-config.bak
