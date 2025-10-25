@@ -187,7 +187,9 @@ $ cp bin/hyoki ~/bin/
     - Fucoidan ([`shard.yml`](shard.yml)を参照)
     - libmecab-dev
 
-注意: 古いバージョンのlibmecab-devパッケージを使う場合、少々調整を施す必要があるかもしれません。バージョン0.996-14および0.996-15では、筆者は次のようにプライベートなパッケージを使って問題を回避しました:
+開発者向けの注意: 何らかの理由で、Hyokiをビルドするのに必要なライブラリであるfucoidan shardやmecab shardのspecを実行したい場合は、気をつけてください。古いバージョンのlibmecab-dev Debianパッケージを使っているならば、`mecab-config --dicdir`が正しいディレクトリ名を返すように、少々調整を施す必要があるかもしれません。
+
+libmecab-dev 0.996-14および0.996-15では、筆者は次のようにプライベートなパッケージを使って問題を回避しました:
 
 ```
 $ mkdir workdir && cd workdir
@@ -207,9 +209,10 @@ $ sudo dpkg --install ../libmecab-dev_0.996-15+hisashim1_amd64.deb ../libmecab2_
 
 （参考: [#1024618 - libmecab-dev: mecab-config --dicdir prints wrong directory](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1024618)）
 
-別の方法として、`/usr/bin/mecab-config`に直接変更を加えてしまうという手もあります。例えば次のように：
+別の方法として、`/usr/bin/mecab-config`に直接変更を加えてしまうという手もあります。例えば次のように:
 
 ```
+$ sudo apt install libmecab-dev
 $ sudo sed -i.bak \
   "s|\${prefix}/lib/x86_64-linux-gnu/mecab/dic|/var/lib/mecab/dic|" \
   /usr/bin/mecab-config
