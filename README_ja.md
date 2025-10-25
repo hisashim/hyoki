@@ -184,10 +184,10 @@ $ cp bin/hyoki ~/bin/
   * ビルドするのに必要なもの:
     - Unix系のOS（テストはDebian GNU/Linuxで行った）
     - [Crystal](https://crystal-lang.org)
-    - Fucoidan ([`shard.yml`](shard.yml)を参照)
+    - [crystal-fucoidan](https://github.com/lpm11/crystal-fucoidan) ([`shard.yml`](shard.yml)を参照)
     - libmecab-dev
 
-開発者向けの注意: 何らかの理由で、Hyokiをビルドするのに必要なライブラリであるfucoidan shardやmecab shardのspecを実行したい場合は、気をつけてください。古いバージョンのlibmecab-dev Debianパッケージを使っているならば、`mecab-config --dicdir`が正しいディレクトリ名を返すように、少々調整を施す必要があるかもしれません。
+開発者向けの注意: 何らかの理由で、Hyokiをビルドするのに必要なライブラリであるcrystal-fucoidanやcrystal-mecabのspecを実行したい場合は、気をつけてください。古いバージョンのlibmecab-dev Debianパッケージを使っているならば、`mecab-config --dicdir`が正しいディレクトリ名を返すように、少々調整を施す必要があるかもしれません。
 
 libmecab-dev 0.996-14および0.996-15では、筆者は次のようにプライベートなパッケージを使って問題を回避しました:
 
@@ -269,7 +269,7 @@ $
 次の方々に深く感謝します:
 
   * Taku Kudo（MeCab作者）
-  * lpm11（mecab shardとfucoidan shardの作者）
+  * T. Tsunoda（crystal-mecabおよびcrystal-fucoidanの作者）
   * Crystalとそのコミュニティ
 
 ## 貢献者
