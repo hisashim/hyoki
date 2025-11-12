@@ -1,0 +1,51 @@
+= hyoki(1)
+
+== NAME
+
+hyoki - variants finder for Japanese text
+
+== SYNOPSIS
+
+hyoki [OPTIONS]... [FILE]...
+
+== DESCRIPTION
+
+Hyoki helps authors and editors to find variants in Japanese language text.
+
+It shows words (morphemes) whose dictionary forms have the same yomi but have different representations, regardless of their meanings. It may make it easier to check variants, either intentional or unintentional.
+
+== OPTIONS
+
+--report-type=variants|heteronyms::
+  Choose report type (default: variants)
+
+--report-format=text|markdown|tsv::
+  Choose report format (default: text)
+
+--highlight=auto|always|never::
+  Enable/disable excerpt highlighting (default: auto)
+
+--excerpt-context-length=N|N,M::
+  Set excerpt context length to N (or preceding N and succeeding M) characters (default: 5)
+
+--sort-order=alphabetical|appearance::
+  Specify how report items should be sorted (default: alphabetical)
+
+--exclude-ascii-only-items=true|false::
+  Specify whether to exclude ASCII-only items in the output (default: false)
+
+--pager=PAGER::
+  Specify pager (default: "", falls back to $HYOKI_PAGER or $PAGER)
+
+--mecab-dict-dir=DIR::
+  Specify MeCab dictionary directory to use (e.g. /var/lib/mecab/dic/ipadic-utf8)
+
+--help::
+  Show help message
+
+--version::
+  Show version
+
+== AUTHOR
+
+Hisashi Morita

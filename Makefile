@@ -4,8 +4,9 @@ BUILD_OPTS = --error-trace --release
 SPEC_OPTS = --error-trace
 DESTDIR =
 PREFIX = /usr/local
+SOURCE_DATE_EPOCH := $(shell (git show --quiet --format=%ct HEAD || stat --format "%Y" Makefile) 2> /dev/null)
 
-all: check docs build
+all: check build doc
 
 check: formatcheck shardscheck spec
 
@@ -21,22 +22,24 @@ formatcheck:
 shardscheck:
 	shards check || shards install
 
-docs:
-	$(CRYSTAL) docs
+%.1: %.adoc
+	SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) asciidoctor --backend=manpage --out-file=$@ $<
+
+doc: doc/hyoki.1
 
 build: bin/hyoki
 
 bin/hyoki:
 	shards build $(BUILD_OPTS)
 
-install: bin/hyoki
+install: bin/hyoki doc/man/hyoki.1
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp bin/hyoki $(DESTDIR)$(PREFIX)/bin/
 
 mostlyclean:
-	rm -fr *.log bin/ docs/
+	rm -fr *.log bin/ doc/man/*.1
 
 clean: mostlyclean
 	rm -fr lib/
 
-.PHONY: all check spec formatcheck shardscheck docs build install mostlyclean clean
+.PHONY: all check spec formatcheck shardscheck doc build install mostlyclean clean
