@@ -1,0 +1,12 @@
+Source: hyoki
+Section: text
+Priority: optional
+Maintainer: Hisashi Morita <hisashim@icloud.com>
+Build-Depends: debhelper-compat (= 13), crystal, shards, libmecab-dev, mecab-ipadic-utf8, git
+Standards-Version: 3.8.4
+
+Package: hyoki
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: helps finding variants in Japanese text
+ Hyoki helps authors and editors to find variants in Japanese language text
