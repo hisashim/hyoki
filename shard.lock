@@ -1,0 +1,10 @@
+version: 2.0
+shards:
+  fucoidan:
+    git: https://github.com/hisashim/crystal-fucoidan.git
+    version: 0.1.1+git.commit.74c3f24a6d4dc9267c47888f5116296946e1f1a8
+
+  mecab:
+    git: https://github.com/hisashim/crystal-mecab.git
+    version: 0.1.0+git.commit.ff0ed2a3bdb4c96e91c1f0dc7e8e3687ea6a85bc
+
