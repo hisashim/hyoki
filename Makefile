@@ -2,6 +2,8 @@ CRYSTAL = crystal
 CRYSTAL_PATH = `$(CRYSTAL) env CRYSTAL_PATH`
 BUILD_OPTS = --error-trace --release
 SPEC_OPTS = --error-trace
+DESTDIR =
+PREFIX = /usr/local
 
 all: check docs build
 
@@ -22,8 +24,14 @@ shardscheck:
 docs:
 	$(CRYSTAL) docs
 
-build:
+build: bin/hyoki
+
+bin/hyoki:
 	shards build $(BUILD_OPTS)
+
+install: bin/hyoki
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp bin/hyoki $(DESTDIR)$(PREFIX)/bin/
 
 mostlyclean:
 	rm -fr *.log bin/ docs/
@@ -31,4 +39,4 @@ mostlyclean:
 clean: mostlyclean
 	rm -fr lib/
 
-.PHONY: all check spec formatcheck shardscheck docs build mostlyclean clean
+.PHONY: all check spec formatcheck shardscheck docs build install mostlyclean clean
