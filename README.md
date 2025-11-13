@@ -187,45 +187,6 @@ $ cp bin/hyoki ~/bin/
     - [crystal-fucoidan](https://github.com/lpm11/crystal-fucoidan) (See [`shard.yml`](shard.yml))
     - libmecab-dev
 
-Note for developers: If for some reason you happen to want to run specs for the crystal-fucoidan and crystal-mecab which are build dependencies of Hyoki, keep in mind: If you are using an older version of libmecab-dev Debian package, you may need to make a slight adjustment so that `mecab-config --dicdir` would return the correct directory name.
-
-For libmecab-dev 0.996-14 and 0.996-15, we took a workaround using private packages:
-
-```
-$ mkdir workdir && cd workdir
-$ git clone https://salsa.debian.org/hisashim/mecab.git
-$ cd mecab
-$ git switch adjust-mecab-config-dicdir-for-debian
-$ sudo apt install build-essential
-$ dpkg-buildpackage -b -rfakeroot -us -uc
-...
-dpkg-checkbuilddeps: error: Unmet build dependencies: ...
-...
-$ sudo apt install ...
-$ dpkg-buildpackage -b -rfakeroot -us -uc
-...
-$ sudo dpkg --install ../libmecab-dev_0.996-15+hisashim1_amd64.deb ../libmecab2_0.996-15+hisashim1_amd64.deb
-```
-
-(See [#1024618 - libmecab-dev: mecab-config --dicdir prints wrong directory](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1024618).)
-
-Alternatively, you can just edit `/usr/bin/mecab-config` directly, e.g.:
-
-```
-$ sudo apt install libmecab-dev
-$ sudo sed -i.bak \
-  "s|\${prefix}/lib/x86_64-linux-gnu/mecab/dic|/var/lib/mecab/dic|" \
-  /usr/bin/mecab-config
-$ diff -u /usr/bin/mecab-config.bak /usr/bin/mecab-config
---- /usr/bin/mecab-config.bak
-+++ /usr/bin/mecab-config
-     --dicdir)
--             echo ${prefix}/lib/x86_64-linux-gnu/mecab/dic
-+             echo /var/lib/mecab/dic
-              ;;
-$
-```
-
 ## Notes
 
 ### Limitations and known problems
@@ -243,7 +204,7 @@ $
       ...
       $
       ```
-  * Results may be incorrect. Most likely because of bugs, and possibly because this software is based on probabilistic inference.
+  * Results may be incorrect, most likely because of bugs.
   * Input text must be UTF-8/LF.
   * MeCab dictionary must be encoded in UTF-8.
 

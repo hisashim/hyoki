@@ -187,45 +187,6 @@ $ cp bin/hyoki ~/bin/
     - [crystal-fucoidan](https://github.com/lpm11/crystal-fucoidan) ([`shard.yml`](shard.yml)を参照)
     - libmecab-dev
 
-開発者向けの注意: 何らかの理由で、Hyokiをビルドするのに必要なライブラリであるcrystal-fucoidanやcrystal-mecabのspecを実行したい場合は、気をつけてください。古いバージョンのlibmecab-dev Debianパッケージを使っているならば、`mecab-config --dicdir`が正しいディレクトリ名を返すように、少々調整を施す必要があるかもしれません。
-
-libmecab-dev 0.996-14および0.996-15では、筆者は次のようにプライベートなパッケージを使って問題を回避しました:
-
-```
-$ mkdir workdir && cd workdir
-$ git clone https://salsa.debian.org/hisashim/mecab.git
-$ cd mecab
-$ git switch adjust-mecab-config-dicdir-for-debian
-$ sudo apt install build-essential
-$ dpkg-buildpackage -b -rfakeroot -us -uc
-...
-dpkg-checkbuilddeps: error: Unmet build dependencies: ...
-...
-$ sudo apt install ...
-$ dpkg-buildpackage -b -rfakeroot -us -uc
-...
-$ sudo dpkg --install ../libmecab-dev_0.996-15+hisashim1_amd64.deb ../libmecab2_0.996-15+hisashim1_amd64.deb
-```
-
-（参考: [#1024618 - libmecab-dev: mecab-config --dicdir prints wrong directory](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1024618)）
-
-別の方法として、`/usr/bin/mecab-config`に直接変更を加えてしまうという手もあります。例えば次のように:
-
-```
-$ sudo apt install libmecab-dev
-$ sudo sed -i.bak \
-  "s|\${prefix}/lib/x86_64-linux-gnu/mecab/dic|/var/lib/mecab/dic|" \
-  /usr/bin/mecab-config
-$ diff -u /usr/bin/mecab-config.bak /usr/bin/mecab-config
---- /usr/bin/mecab-config.bak
-+++ /usr/bin/mecab-config
-     --dicdir)
--             echo ${prefix}/lib/x86_64-linux-gnu/mecab/dic
-+             echo /var/lib/mecab/dic
-              ;;
-$
-```
-
 ## 備考
 
 ### 制限事項と既知の問題
@@ -243,7 +204,7 @@ $
       ...
       $
       ```
-  * 出力結果が正しいとは限らない。おおかたバグのせいだが、このツールが確率的な推論に基づいていることが原因であるケースもあるかもしれない。
+  * 出力結果が間違っている可能性がある。おそらくバグが原因。
   * 入力テキストはUTF-8/LFでなければならない。
   * MeCab辞書のエンコーディングはUTF-8でなければならない。
 

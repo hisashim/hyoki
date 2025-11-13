@@ -8,13 +8,9 @@ jobs:
     steps:
       - name: Install Crystal
         uses: crystal-lang/install-crystal/@v1
-      - name: Install MeCab library and headers
+      - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get --yes --no-upgrade install libmecab-dev
-      - name: Apply workaround to mecab-config (not a requirement, but for diagnostic purposes)
-        run: sudo sed -i.bak "s|\${prefix}/lib/x86_64-linux-gnu/mecab/dic|/var/lib/mecab/dic|" /usr/bin/mecab-config
-      - name: Show workaround diff (not a requirement, but for diagnostic purposes)
-        run: diff -u /usr/bin/mecab-config.bak /usr/bin/mecab-config | cat
-      - name: Install MeCab dictionary
+      - name: Install runtime dependencies
         run: sudo apt-get --yes --no-upgrade install mecab-ipadic-utf8
       - name: Checkout working copy
         uses: actions/checkout@main
