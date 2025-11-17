@@ -5,6 +5,7 @@ SPEC_OPTS = --error-trace
 DESTDIR =
 PREFIX = /usr/local
 SOURCE_DATE_EPOCH := $(shell (git show --quiet --format=%ct HEAD || stat --format "%Y" Makefile) 2> /dev/null)
+DOC = doc/man/hyoki.1 doc/README.md doc/README_ja.md doc/README.html doc/README_ja.html
 
 all: check build doc
 
@@ -25,19 +26,25 @@ shardscheck:
 %.1: %.adoc
 	SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) asciidoctor --backend=manpage --out-file=$@ $<
 
-doc: doc/hyoki.1
+doc/%.md: %.md
+	sed 's/\[\([^]]*\)\](doc\/\([^]]*\))/[\1](\2)/g' $< > $@
+
+doc/%.html: doc/%.md
+	cmark $< | sed 's/href="\([^"]*\)\.md"/href="\1.html"/g' > $@
+
+doc: $(DOC)
 
 build: bin/hyoki
 
 bin/hyoki:
 	shards build $(BUILD_OPTS)
 
-install: bin/hyoki doc/man/hyoki.1
+install: bin/hyoki $(DOC)
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp bin/hyoki $(DESTDIR)$(PREFIX)/bin/
 
 mostlyclean:
-	rm -fr *.log bin/ doc/man/*.1
+	rm -fr *.log bin/ doc/man/*.1 doc/*.md doc/*.html
 
 clean: mostlyclean
 	rm -fr lib/
