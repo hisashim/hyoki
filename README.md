@@ -169,23 +169,25 @@ $
 
 ```
 $ git clone https://github.com/hisashim/hyoki.git && cd hyoki
-$ sudo apt install crystal libmecab-dev
-$ make build
-$ sudo apt install mecab-ipadic-utf8
+$ sudo apt install crystal shards libmecab-dev mecab-ipadic-utf8
+$ make
 $ cp bin/hyoki ~/bin/
 ```
 
 ### Requirements
 
   * Runtime requirements:
-    - Unix-like operating system (Tested on Debian GNU/Linux)
+    - Unix-like operating system (Tested mostly on Debian GNU/Linux)
     - libmecab2
     - mecab-ipadic-utf8 or mecab-naist-jdic
   * Build requirements:
-    - Unix-like operating system (Tested on Debian GNU/Linux)
+    - Unix-like operating system (Tested mostly on Debian GNU/Linux)
     - [Crystal](https://crystal-lang.org)
+    - [Shards](https://github.com/crystal-lang/shards) (Dependency manager for Crystal)
     - [crystal-fucoidan](https://github.com/lpm11/crystal-fucoidan) (See [`shard.yml`](shard.yml))
     - libmecab-dev
+    - [AsciiDoctor](https://asciidoctor.org) (for building manual pages)
+    - [Git](https://git-scm.com)
 
 ## Notes
 
