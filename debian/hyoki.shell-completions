@@ -1,0 +1,2 @@
+bash doc/shell_completion/hyoki.bash hyoki
+zsh doc/shell_completion/_hyoki.zsh _hyoki
