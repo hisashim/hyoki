@@ -20,7 +20,7 @@ _hyoki() {
     '--highlight=[Enable/disable excerpt highlighting]:highlight:(auto always never)'
     '--excerpt-context-length=[Set excerpt context length]:excerpt_context_length:'
     '--sort-order=[Specify how report items should be sorted]:sort_order:(alphabetical appearance)'
-    '--include-ascii=[Specify whether to include ASCII-only items in the output]:include_ascii:(true false)'
+    '--exclude-ascii-only-items=[Specify whether to exclude ASCII-only items in the output]:exclude_ascii_only_items:(true false)'
     '--pager=[Specify pager]:pager:'
     '--mecab-dict-dir=[Specify MeCab dictionary directory to use]:mecab_dict_dir:_dir_list'
     '(- *)--help[Show help message]'

@@ -11,7 +11,7 @@ _hyoki_completions()
     --highlight \
     --excerpt-context-length \
     --sort-order \
-    --include-ascii \
+    --exclude-ascii-only-items \
     --pager \
     --mecab-dict-dir \
     --help \
@@ -40,7 +40,7 @@ _hyoki_completions()
       COMPREPLY=( $(compgen -W 'alphabetical appearance' -- "${cur}") )
       return 0
       ;;
-    --include-ascii)
+    --exclude-ascii-only-items)
       COMPREPLY=( $(compgen -W 'true false' -- "${cur}") )
       return 0
       ;;
