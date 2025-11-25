@@ -6,10 +6,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: Update package lists
+        run: sudo apt-get update
       - name: Install Crystal
         uses: crystal-lang/install-crystal/@v1
       - name: Install build dependencies
-        run: sudo apt-get update && sudo apt-get --yes --no-upgrade install libmecab-dev
+        run: sudo apt-get --yes --no-upgrade install libmecab-dev
       - name: Install runtime dependencies
         run: sudo apt-get --yes --no-upgrade install mecab-ipadic-utf8
       - name: Checkout working copy
