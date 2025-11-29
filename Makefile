@@ -2,6 +2,7 @@ CRYSTAL = crystal
 CRYSTAL_PATH = `$(CRYSTAL) env CRYSTAL_PATH`
 BUILD_OPTS = --error-trace --release
 SPEC_OPTS = --error-trace
+MD2HTML = md2html --full-html
 DESTDIR =
 PREFIX = /usr/local
 SOURCE_DATE_EPOCH := $(shell (git show --quiet --format=%ct HEAD || stat --format "%Y" Makefile) 2> /dev/null)
@@ -30,7 +31,8 @@ doc/%.md: %.md
 	sed 's/\[\([^]]*\)\](doc\/\([^]]*\))/[\1](\2)/g' $< > $@
 
 doc/%.html: doc/%.md
-	cmark $< | sed 's/href="\([^"]*\)\.md"/href="\1.html"/g' > $@
+	$(MD2HTML) --html-title="$(shell grep '^# .*' $< | sed 's/^# //')" $< \
+	| sed 's/href="\([^"]*\)\.md"/href="\1.html"/g' > $@
 
 doc: $(DOC)
 

@@ -13,7 +13,7 @@ jobs:
       - name: Install build dependencies
         run: sudo apt-get --yes --no-upgrade install libmecab-dev
       - name: Install other development dependencies
-        run: sudo apt-get --yes --no-upgrade install mecab-ipadic-utf8 asciidoctor cmark
+        run: sudo apt-get --yes --no-upgrade install mecab-ipadic-utf8 asciidoctor md2html
       - name: Checkout working copy
         uses: actions/checkout@main
       - name: Run self-check
