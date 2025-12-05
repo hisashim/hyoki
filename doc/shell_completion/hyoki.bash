@@ -62,4 +62,4 @@ _hyoki_completions()
     return 0
   fi
 } &&
-  complete -o filenames -o bashdefault -o default -F _hyoki_completions hyoki
+  complete -o bashdefault -o default -F _hyoki_completions hyoki
