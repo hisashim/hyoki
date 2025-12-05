@@ -45,15 +45,15 @@ _hyoki_completions()
       return 0
       ;;
     --pager)
-      COMPREPLY=( $(compgen -W '' -- "${cur}") )
+      COMPREPLY=( $(compgen -A command -- "${cur}") )
       return 0
       ;;
     --mecab-dict-dir)
-      COMPREPLY=( $(compgen -W '/var/lib/mecab/dic/ipadic-utf8' -- "${cur}") )
+      COMPREPLY=( $(compgen -o dirnames -- "${cur}") )
       return 0
       ;;
     --help | --version)
-      return 1
+      return 0
       ;;
   esac
 
