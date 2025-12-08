@@ -1,6 +1,6 @@
 # Hyoki
 
-  * [English](README.md) | [Japanese](README_ja.md)
+  * English | [Japanese](README_ja.md)
 
 Hyoki helps authors and editors to find variants (異表記, 表記ゆれ) in Japanese language text.
 

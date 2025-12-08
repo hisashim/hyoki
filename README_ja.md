@@ -1,6 +1,6 @@
 # Hyoki
 
-  * [English](README.md) | [Japanese](README_ja.md)
+  * [English](README.md) | Japanese
 
 Hyokiは、日本語の文章の表記ゆれを見つけることを手助けするソフトウェアです。
 
