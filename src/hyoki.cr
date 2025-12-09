@@ -1,5 +1,16 @@
 require "fucoidan"
+require "colorize"
 require "option_parser"
+
+module Colorize
+  def self.enabled(&block) # Kludge: not atomic and not thread safe
+    original_state = Colorize.enabled?
+    Colorize.enabled = true
+    result = yield
+    Colorize.enabled = original_state
+    result
+  end
+end
 
 module Hyoki
   VERSION = "0.5.0"
@@ -172,6 +183,14 @@ module Hyoki
       Appearance
     end
 
+    struct Highlight
+      def apply(str : String)
+        Colorize.enabled do
+          str.colorize.bold.underline.reverse
+        end
+      end
+    end
+
     struct Line
       @source_string : String
       @body : String
@@ -335,7 +354,7 @@ module Hyoki
       end
     end
 
-    def excerpt(morpheme, context_length, highlight = nil)
+    def excerpt(morpheme, context_length, highlight : Highlight? = nil)
       surface = morpheme.surface
       index = morpheme.index_in_source_string
       line_body = morpheme.line.body
@@ -355,8 +374,7 @@ module Hyoki
           end
         body = surface
         suffix = line_body[(index + body.size), context_length_after]
-        # 1: Bold, 4: Underline, 7: Invert, 0: Reset
-        "#{prefix}\e[1;4;7m#{body}\e[0m#{suffix}"
+        "#{prefix}#{highlight.apply(body)}#{suffix}"
       else
         if leftmost.negative?
           line_body[0, (index + surface.size + context_length_after)]
@@ -495,7 +513,7 @@ module Hyoki
 
     def report(type = ReportType::Variants, format = ReportFormat::Text,
                excerpt_context_length = 5, sort_order = SortOrder::Alphabetical,
-               highlight = false, header = nil, exclude_ascii_only_items = false)
+               highlight = nil, header = nil, exclude_ascii_only_items = false)
       # FIXME: the application somehow slows down if we do not use
       # conditionals (case..when) and unify invocations of the same methods
       # (e.g. report_variants(format, excerpt_context_length, sort_order, highlight, header))
