@@ -183,7 +183,7 @@ module Hyoki
       Appearance
     end
 
-    struct Highlight
+    struct Highlighter
       def apply(str : String)
         Colorize.enabled do
           str.colorize.bold.underline.reverse
@@ -354,7 +354,7 @@ module Hyoki
       end
     end
 
-    def excerpt(morpheme, context_length, highlight : Highlight? = nil)
+    def excerpt(morpheme, context_length, highlighter : Highlighter? = nil)
       surface = morpheme.surface
       index = morpheme.index_in_source_string
       line_body = morpheme.line.body
@@ -365,7 +365,7 @@ module Hyoki
         end
       leftmost = index - context_length_before
 
-      if highlight
+      if highlighter
         prefix =
           if leftmost.negative?
             line_body[0, index]
@@ -374,7 +374,7 @@ module Hyoki
           end
         body = surface
         suffix = line_body[(index + body.size), context_length_after]
-        "#{prefix}#{highlight.apply(body)}#{suffix}"
+        "#{prefix}#{highlighter.apply(body)}#{suffix}"
       else
         if leftmost.negative?
           line_body[0, (index + surface.size + context_length_after)]
@@ -384,7 +384,7 @@ module Hyoki
       end
     end
 
-    def items_to_text(items, excerpt_context_length, highlight, &)
+    def items_to_text(items, excerpt_context_length, highlighter, &)
       report_items =
         items.map { |category, relevant_morphemes|
           subcategories = relevant_morphemes.map { |m| yield m }
@@ -397,7 +397,7 @@ module Hyoki
               line_number = m.line.index + 1
               character_number = m.index_in_source_string + 1
               subcategory = yield m
-              excerpt = excerpt(m, excerpt_context_length, highlight)
+              excerpt = excerpt(m, excerpt_context_length, highlighter)
               "  - " +
                 [source_name,
                  "L#{line_number}, C#{character_number}",
@@ -421,7 +421,7 @@ module Hyoki
       end
     end
 
-    def items_to_markdown(items, excerpt_context_length, highlight, &)
+    def items_to_markdown(items, excerpt_context_length, highlighter, &)
       report_items =
         items.map { |category, relevant_morphemes|
           subcategories = relevant_morphemes.map { |m| yield m }
@@ -431,7 +431,7 @@ module Hyoki
           subitems =
             relevant_morphemes.map { |m|
               source_name = m.line.source_name
-              excerpt = excerpt(m, excerpt_context_length, highlight)
+              excerpt = excerpt(m, excerpt_context_length, highlighter)
               excerpt_md = "#{markup_as_markdown_inline_code(excerpt)}"
               "  - " + [source_name, excerpt_md].compact.join(": ")
             }
@@ -440,7 +440,7 @@ module Hyoki
       report_items.join("\n")
     end
 
-    def items_to_tsv(items, excerpt_context_length, highlight, header, &)
+    def items_to_tsv(items, excerpt_context_length, highlighter, header, &)
       report_lines =
         items.map { |category, relevant_morphemes|
           relevant_morphemes.map { |m|
@@ -448,7 +448,7 @@ module Hyoki
             line_number = m.line.index + 1
             character_number = m.index_in_source_string + 1
             subcategory = yield m
-            excerpt = excerpt(m, excerpt_context_length, highlight)
+            excerpt = excerpt(m, excerpt_context_length, highlighter)
             [category, source_name, line_number, character_number, subcategory, m.surface, excerpt]
               .map(&.to_s.gsub(TSV_ESCAPE_REGEX, TSV_ESCAPE)).join("\t")
           }
@@ -456,11 +456,11 @@ module Hyoki
       [header, report_lines.flatten.join("\n")].join("\n")
     end
 
-    def report_variants(format, excerpt_context_length, sort_order, highlight, header, exclude_ascii_only_items)
+    def report_variants(format, excerpt_context_length, sort_order, highlighter, header, exclude_ascii_only_items)
       items = variants(@lines, @yomi_parser, sort_order, exclude_ascii_only_items)
       case format
       in ReportFormat::Text
-        items_to_text(items, excerpt_context_length, highlight) { |morpheme|
+        items_to_text(items, excerpt_context_length, highlighter) { |morpheme|
           surface = morpheme.surface
           if ASCII_WORD_REGEX.match surface
             # Kludge: For ASCII-only words, categorize subitems by surface as a
@@ -473,7 +473,7 @@ module Hyoki
           end
         }
       in ReportFormat::Markdown
-        items_to_markdown(items, excerpt_context_length, highlight) { |morpheme|
+        items_to_markdown(items, excerpt_context_length, highlighter) { |morpheme|
           surface = morpheme.surface
           if ASCII_WORD_REGEX.match surface
             surface
@@ -482,7 +482,7 @@ module Hyoki
           end
         }
       in ReportFormat::TSV
-        items_to_tsv(items, excerpt_context_length, highlight, header: header) { |morpheme|
+        items_to_tsv(items, excerpt_context_length, highlighter, header: header) { |morpheme|
           surface = morpheme.surface
           if ASCII_WORD_REGEX.match surface
             surface
@@ -493,19 +493,19 @@ module Hyoki
       end
     end
 
-    def report_heteronyms(format, excerpt_context_length, sort_order, highlight, header, exclude_ascii_only_items)
+    def report_heteronyms(format, excerpt_context_length, sort_order, highlighter, header, exclude_ascii_only_items)
       items = heteronyms(@lines, sort_order, exclude_ascii_only_items)
       case format
       in ReportFormat::Text
-        items_to_text(items, excerpt_context_length, highlight) { |morpheme|
+        items_to_text(items, excerpt_context_length, highlighter) { |morpheme|
           morpheme.feature.yomi # categorize subitems by yomi
         }
       in ReportFormat::Markdown
-        items_to_markdown(items, excerpt_context_length, highlight) { |morpheme|
+        items_to_markdown(items, excerpt_context_length, highlighter) { |morpheme|
           morpheme.feature.yomi # categorize subitems by yomi
         }
       in ReportFormat::TSV
-        items_to_tsv(items, excerpt_context_length, highlight, header: header) { |morpheme|
+        items_to_tsv(items, excerpt_context_length, highlighter, header: header) { |morpheme|
           morpheme.feature.yomi # categorize subitems by yomi
         }
       end
@@ -513,10 +513,10 @@ module Hyoki
 
     def report(type = ReportType::Variants, format = ReportFormat::Text,
                excerpt_context_length = 5, sort_order = SortOrder::Alphabetical,
-               highlight = nil, header = nil, exclude_ascii_only_items = false)
+               highlighter = nil, header = nil, exclude_ascii_only_items = false)
       # FIXME: the application somehow slows down if we do not use
       # conditionals (case..when) and unify invocations of the same methods
-      # (e.g. report_variants(format, excerpt_context_length, sort_order, highlight, header))
+      # (e.g. report_variants(format, excerpt_context_length, sort_order, highlighter, header))
       case type
       in ReportType::Variants
         case format
@@ -525,7 +525,7 @@ module Hyoki
         in ReportFormat::TSV
           header ||= TSV_HEADER_VARIANTS
         end
-        report_variants(format, excerpt_context_length, sort_order, highlight, header, exclude_ascii_only_items)
+        report_variants(format, excerpt_context_length, sort_order, highlighter, header, exclude_ascii_only_items)
       in ReportType::Heteronyms
         case format
         in ReportFormat::Text
@@ -533,7 +533,7 @@ module Hyoki
         in ReportFormat::TSV
           header ||= TSV_HEADER_HETERONYMS
         end
-        report_heteronyms(format, excerpt_context_length, sort_order, highlight, header, exclude_ascii_only_items)
+        report_heteronyms(format, excerpt_context_length, sort_order, highlighter, header, exclude_ascii_only_items)
       end
     end
   end
@@ -700,11 +700,11 @@ module Hyoki
         exit 0
       end
 
-      highlight =
+      highlighter =
         case c.highlight
-        in Highlight::Auto   then STDOUT.tty?
-        in Highlight::Always then true
-        in Highlight::Never  then false
+        in Highlight::Auto   then STDOUT.tty? ? Document::Highlighter.new : nil
+        in Highlight::Always then Document::Highlighter.new
+        in Highlight::Never  then nil
         end
 
       sources =
@@ -727,7 +727,7 @@ module Hyoki
             doc.report(type: type, format: format,
               excerpt_context_length: c.excerpt_context_length,
               sort_order: c.sort_order,
-              highlight: highlight,
+              highlighter: highlighter,
               exclude_ascii_only_items: c.exclude_ascii_only_items)
           end
         end

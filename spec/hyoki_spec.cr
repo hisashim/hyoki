@@ -177,7 +177,7 @@ describe "Hyoki" do
           EOS
         doc = Hyoki::Document.new(input)
         m = doc.lines[0].morphemes.[5]
-        hl = Hyoki::Document::Highlight.new
+        hl = Hyoki::Document::Highlighter.new
         doc.excerpt(m, 0, nil).should eq "警官"
         doc.excerpt(m, {1, 1}, hl).should eq "と\e[1;4;7m警官\e[22;24;27mは"
       end
@@ -218,14 +218,14 @@ describe "Hyoki" do
               EOS
         end
 
-        it "returns report with highlighting when highlight is specified" do
+        it "returns report with highlighting when highlighter is specified" do
           input = <<-EOS
             流れよわが涙、と警官は言った。
             そういうことがあるのだという。
             EOS
           doc = Hyoki::Document.new(input)
-          hl = Hyoki::Document::Highlight.new
-          doc.report(highlight: hl).should eq <<-EOS.chomp
+          hl = Hyoki::Document::Highlighter.new
+          doc.report(highlighter: hl).should eq <<-EOS.chomp
             * イウ: 言う (1) | いう (1)
               - L1, C12\t言う\t、と警官は\e[1;4;7m言っ\e[22;24;27mた。
               - L2, C13\tいう\tあるのだと\e[1;4;7mいう\e[22;24;27m。
@@ -464,14 +464,14 @@ describe "Hyoki" do
             EOS
         end
 
-        it "returns report with highlighting when highlight is specified" do
+        it "returns report with highlighting when highlighter is specified" do
           input = <<-EOS
             流れよわが涙、と警官は言った。
             そういうことがあるのだという。
             EOS
           doc = Hyoki::Document.new(input)
-          hl = Hyoki::Document::Highlight.new
-          doc.report(format: Hyoki::Document::ReportFormat::TSV, highlight: hl).should eq <<-EOS.chomp
+          hl = Hyoki::Document::Highlighter.new
+          doc.report(format: Hyoki::Document::ReportFormat::TSV, highlighter: hl).should eq <<-EOS.chomp
             lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
             イウ\t\t1\t12\t言う\t言っ\t、と警官は\e[1;4;7m言っ\e[22;24;27mた。
             イウ\t\t2\t13\tいう\tいう\tあるのだと\e[1;4;7mいう\e[22;24;27m。
