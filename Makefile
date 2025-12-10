@@ -38,7 +38,7 @@ doc: $(DOC)
 
 build: bin/hyoki
 
-bin/hyoki:
+bin/hyoki: src/main.cr src/hyoki.cr
 	shards build $(BUILD_OPTS)
 
 install: bin/hyoki $(DOC)
