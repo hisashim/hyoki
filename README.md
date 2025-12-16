@@ -169,7 +169,7 @@ $
 
 ```
 $ git clone https://github.com/hisashim/hyoki.git && cd hyoki
-$ sudo apt install crystal shards libmecab-dev mecab-ipadic-utf8
+$ sudo apt install crystal shards libmecab-dev mecab-ipadic-utf8 asciidoctor md2html
 $ make
 $ cp bin/hyoki ~/bin/
 ```
@@ -187,7 +187,9 @@ $ cp bin/hyoki ~/bin/
     - [crystal-fucoidan](https://github.com/lpm11/crystal-fucoidan) (See [`shard.yml`](shard.yml))
     - libmecab-dev
     - [AsciiDoctor](https://asciidoctor.org) (for building manual pages)
+    - [md2html](https://github.com/mity/md4c) (for building HTML documents)
     - [Git](https://git-scm.com)
+    - [GNU Make](https://www.gnu.org/software/make/)
 
 ## Notes
 

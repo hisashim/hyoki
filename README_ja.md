@@ -169,7 +169,7 @@ $
 
 ```
 $ git clone https://github.com/hisashim/hyoki.git && cd hyoki
-$ sudo apt install crystal shards libmecab-dev mecab-ipadic-utf8
+$ sudo apt install crystal shards libmecab-dev mecab-ipadic-utf8 asciidoctor md2html
 $ make
 $ cp bin/hyoki ~/bin/
 ```
@@ -177,17 +177,19 @@ $ cp bin/hyoki ~/bin/
 ### 必要なソフトウェア
 
   * 実行するのに必要なもの:
-    - Unix系のOS（テストは主にDebian GNU/Linuxで行われています）
+    - Unix系のOS（テストは主にDebian GNU/Linuxで行われている）
     - libmecab2
     - mecab-ipadic-utf8またはmecab-naist-jdic
   * ビルドするのに必要なもの:
-    - Unix系のOS（テストは主にDebian GNU/Linuxで行われています）
+    - Unix系のOS（テストは主にDebian GNU/Linuxで行われている）
     - [Crystal](https://crystal-lang.org)
     - [Shards](https://github.com/crystal-lang/shards)（Crystalの依存ライブラリ管理ツール）
     - [crystal-fucoidan](https://github.com/lpm11/crystal-fucoidan) ([`shard.yml`](shard.yml)を参照)
     - libmecab-dev
-    - [AsciiDoctor](https://asciidoctor.org)（manual pages生成のため）
+    - [AsciiDoctor](https://asciidoctor.org)（manual page生成のため）
+    - [md2html](https://github.com/mity/md4c)（HTML文書生成のため）
     - [Git](https://git-scm.com)
+    - [GNU Make](https://www.gnu.org/software/make/)
 
 ## 備考
 
