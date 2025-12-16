@@ -10,7 +10,7 @@ DOC = doc/man/hyoki.1 doc/README.md doc/README_ja.md doc/README.html doc/README_
 
 all: check build doc
 
-check: formatcheck shardscheck spec
+check: formatcheck shardscheck spec versioncheck
 
 spec:
 	$(CRYSTAL) spec $(SPEC_OPTS) $@ | tee $@.log
@@ -23,6 +23,10 @@ formatcheck:
 
 shardscheck:
 	shards check || shards install
+
+versioncheck: bin/hyoki shard.yml
+	@echo "Comparing version strings in src/hyoki.cr and in shards.yml"
+	[ "$(shell bin/hyoki --version)" = "$(shell grep version shard.yml | sed 's/version: //g')" ]
 
 %.1: %.adoc
 	SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) asciidoctor --backend=manpage --out-file=$@ $<
@@ -51,4 +55,4 @@ mostlyclean:
 clean: mostlyclean
 	rm -fr lib/
 
-.PHONY: all check spec formatcheck shardscheck doc build install mostlyclean clean
+.PHONY: all check spec formatcheck shardscheck versioncheck doc build install mostlyclean clean
