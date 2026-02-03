@@ -13,7 +13,7 @@ module Colorize
 end
 
 module Hyoki
-  VERSION = "0.5.0"
+  VERSION = "0.5.1"
 
   struct Morpheme
     struct Feature
