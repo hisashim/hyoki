@@ -27,20 +27,26 @@ Usage:
   hyoki [OPTIONS]... [FILE]...
 
 Options:
-    --report-type=variants|heteronyms
-                                     Choose report type (default: variants)
-    --report-format=text|markdown|tsv
-                                     Choose report format (default: text)
-    --highlight=auto|always|never    Enable/disable excerpt highlighting (default: auto)
-    --excerpt-context-length=N|N,M   Set excerpt context length to N (or preceding N and succeeding M) characters (default: 5)
-    --sort-order=alphabetical|appearance
-                                     Specify how report items should be sorted (default: alphabetical)
-    --exclude-ascii-only-items=true|false
-                                     Specify whether to exclude ASCII-only items in the output (default: false)
-    --pager=PAGER                    Specify pager (default: "", falls back to $HYOKI_PAGER or $PAGER)
-    --mecab-dict-dir=DIR             Specify MeCab dictionary directory to use (e.g. /var/lib/mecab/dic/ipadic-utf8)
-    --help                           Show help message
-    --version                        Show version
+    --report-type=TYPE       Choose report type
+                             (variants|heteronyms) (default: variants)
+    --report-format=FORMAT   Choose report format
+                             (text|markdown|tsv) (default: text)
+    --highlight=WHEN         Enable/disable excerpt highlighting
+                             (auto|always|never) (default: auto)
+    --excerpt-context-length=N|N,M
+                             Set excerpt context length to N characters
+                             (or preceding N and succeeding M) (default: 5)
+    --sort-order=HOW         Specify how report items should be sorted
+                             (alphabetical|appearance) (default: alphabetical)
+    --exclude-ascii-only-items=BOOL
+                             Exclude ASCII-only items in the output
+                             (true|false) (default: false)
+    --pager=PAGER            Specify pager
+                             (default: ""; falls back to $HYOKI_PAGER or $PAGER)
+    --mecab-dict-dir=DIR     Specify MeCab dictionary directory
+                             (e.g. /var/lib/mecab/dic/ipadic-utf8)
+    --help                   Show help message
+    --version                Show version
 ```
 
 ### Examples

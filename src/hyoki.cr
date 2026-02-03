@@ -592,6 +592,7 @@ module Hyoki
       c = DEFAULT_CONFIG.dup
 
       op = OptionParser.new do |o|
+        o.summary_width = 24
         o.banner = <<-EOS
           Hyoki helps finding variants in Japanese text
 
@@ -600,8 +601,10 @@ module Hyoki
 
           Options:
           EOS
-        o.on("--report-type=variants|heteronyms", <<-EOS.chomp) { |s|
-          Choose report type (default: #{c.report_type.to_s.downcase})
+        o.on("--report-type=TYPE", <<-EOS.chomp) { |s|
+          Choose report type
+          (#{Document::ReportType.names.map(&.downcase).join("|")}) \
+          (default: #{c.report_type.to_s.downcase})
           EOS
           c.report_type =
             case s
@@ -610,8 +613,10 @@ module Hyoki
             else                   raise "Invalid report type: #{s.inspect}"
             end
         }
-        o.on("--report-format=text|markdown|tsv", <<-EOS.chomp) { |s|
-          Choose report format (default: #{c.report_format.to_s.downcase})
+        o.on("--report-format=FORMAT", <<-EOS.chomp) { |s|
+          Choose report format
+          (#{Document::ReportFormat.names.map(&.downcase).join("|")}) \
+          (default: #{c.report_format.to_s.downcase})
           EOS
           c.report_format =
             case s
@@ -621,8 +626,10 @@ module Hyoki
             else                 raise "Invalid report format: #{s.inspect}"
             end
         }
-        o.on("--highlight=auto|always|never", <<-EOS.chomp) { |s|
-          Enable/disable excerpt highlighting (default: #{c.highlight.to_s.downcase})
+        o.on("--highlight=WHEN", <<-EOS.chomp) { |s|
+          Enable/disable excerpt highlighting
+          (#{Highlight.names.map(&.downcase).join("|")}) \
+          (default: #{c.highlight.to_s.downcase})
           EOS
           c.highlight =
             case s
@@ -633,7 +640,9 @@ module Hyoki
             end
         }
         o.on("--excerpt-context-length=N|N,M", <<-EOS.chomp) { |s|
-          Set excerpt context length to N (or preceding N and succeeding M) characters (default: #{c.excerpt_context_length})
+          Set excerpt context length to N characters
+          (or preceding N and succeeding M) \
+          (default: #{c.excerpt_context_length})
           EOS
           c.excerpt_context_length =
             begin
@@ -646,8 +655,9 @@ module Hyoki
               raise "Invalid value for excerpt context length: #{ex.message}"
             end
         }
-        o.on("--sort-order=alphabetical|appearance", <<-EOS.chomp) { |s|
-          Specify how report items should be sorted \
+        o.on("--sort-order=HOW", <<-EOS.chomp) { |s|
+          Specify how report items should be sorted
+          (#{Document::SortOrder.names.map(&.downcase).join("|")}) \
           (default: #{c.sort_order.to_s.downcase})
           EOS
           c.sort_order =
@@ -657,9 +667,9 @@ module Hyoki
             else                     raise "Invalid value for sort_order: #{s.inspect}"
             end
         }
-        o.on("--exclude-ascii-only-items=true|false", <<-EOS.chomp) { |s|
-          Specify whether to exclude ASCII-only items in the output \
-          (default: #{c.exclude_ascii_only_items})
+        o.on("--exclude-ascii-only-items=BOOL", <<-EOS.chomp) { |s|
+          Exclude ASCII-only items in the output
+          (true|false) (default: #{c.exclude_ascii_only_items})
           EOS
           c.exclude_ascii_only_items =
             case s
@@ -669,13 +679,13 @@ module Hyoki
             end
         }
         o.on("--pager=PAGER", <<-EOS.chomp) { |s|
-          Specify pager \
-          (default: #{c.pager.to_s.inspect}, falls back to $HYOKI_PAGER or $PAGER)
+          Specify pager
+          (default: #{c.pager.to_s.inspect}; falls back to $HYOKI_PAGER or $PAGER)
           EOS
           c.pager = s if s && !s.empty?
         }
         o.on("--mecab-dict-dir=DIR", <<-EOS.chomp) { |s|
-          Specify MeCab dictionary directory to use \
+          Specify MeCab dictionary directory
           (e.g. /var/lib/mecab/dic/ipadic-utf8)
           EOS
           c.mecab_dict_dir =
