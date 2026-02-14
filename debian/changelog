@@ -1,3 +1,9 @@
+hyoki (0.5.1-0+hisashim1) unstable; urgency=low
+
+  * Update with 0.5.1.
+
+ -- Hisashi Morita <hisashim@icloud.com>  Sat, 14 Feb 2026 12:23:15 +0900
+
 hyoki (0.5.0-0+hisashim1) unstable; urgency=low
 
   * Initial release.
