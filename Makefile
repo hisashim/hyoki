@@ -35,6 +35,7 @@ doc/%.md: %.md
 	sed 's/\[\([^]]*\)\](doc\/\([^]]*\))/[\1](\2)/g' $< > $@
 
 doc/%.html: doc/%.md
+	$(MD2HTML) --version > /dev/null && \
 	$(MD2HTML) --html-title="$(shell grep '^# .*' $< | sed 's/^# //')" $< \
 	| sed 's/href="\([^"]*\)\.md"/href="\1.html"/g' > $@
 
