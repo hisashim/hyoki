@@ -96,14 +96,14 @@ describe "Hyoki" do
       it "handles empty input without problems" do
         input = <<-EOS.chomp
           EOS
-        Hyoki::Document.new(input).lines.each { |l|
-          l.morphemes.each { |m|
+        Hyoki::Document.new(input).lines.each do |l|
+          l.morphemes.each do |m|
             substring_start = m.index_in_source_string
             substring_length = m.surface.size
             substring = l.body[substring_start, substring_length]
             substring.should eq m.surface
-          }
-        }
+          end
+        end
       end
     end
 
@@ -356,10 +356,10 @@ describe "Hyoki" do
           doc = Hyoki::Document.new(input)
           doc.report(format: Hyoki::Document::ReportFormat::TSV,
             exclude_ascii_only_items: true).should eq <<-EOS.chomp
-            lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
-            シコウ\t\t1\t11\t思考\t思考\tUnix。思考と試行。
-            シコウ\t\t1\t14\t試行\t試行\tx。思考と試行。
-            EOS
+              lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+              シコウ\t\t1\t11\t思考\t思考\tUnix。思考と試行。
+              シコウ\t\t1\t14\t試行\t試行\tx。思考と試行。
+              EOS
         end
 
         context "input is from non-file stream (e.g. ARGF, STDIN)" do
@@ -504,20 +504,20 @@ describe "Hyoki" do
           doc = Hyoki::Document.new(input)
           doc.report(format: Hyoki::Document::ReportFormat::TSV,
             sort_order: Hyoki::Document::SortOrder::Alphabetical).should eq <<-EOS.chomp
-            lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
-            イシ\t\t1\t7\t意思\t意思\t考と試行。意思と意志。
-            イシ\t\t1\t10\t意志\t意志\t行。意思と意志。
-            シコウ\t\t1\t1\t思考\t思考\t思考と試行。意
-            シコウ\t\t1\t4\t試行\t試行\t思考と試行。意思と意
-            EOS
+              lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+              イシ\t\t1\t7\t意思\t意思\t考と試行。意思と意志。
+              イシ\t\t1\t10\t意志\t意志\t行。意思と意志。
+              シコウ\t\t1\t1\t思考\t思考\t思考と試行。意
+              シコウ\t\t1\t4\t試行\t試行\t思考と試行。意思と意
+              EOS
           doc.report(format: Hyoki::Document::ReportFormat::TSV,
             sort_order: Hyoki::Document::SortOrder::Appearance).should eq <<-EOS.chomp
-            lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
-            シコウ\t\t1\t1\t思考\t思考\t思考と試行。意
-            シコウ\t\t1\t4\t試行\t試行\t思考と試行。意思と意
-            イシ\t\t1\t7\t意思\t意思\t考と試行。意思と意志。
-            イシ\t\t1\t10\t意志\t意志\t行。意思と意志。
-            EOS
+              lexical form yomi\tsource\tline\tcharacter\tlexical form\tsurface\texcerpt
+              シコウ\t\t1\t1\t思考\t思考\t思考と試行。意
+              シコウ\t\t1\t4\t試行\t試行\t思考と試行。意思と意
+              イシ\t\t1\t7\t意思\t意思\t考と試行。意思と意志。
+              イシ\t\t1\t10\t意志\t意志\t行。意思と意志。
+              EOS
         end
 
         it "uses yomi of lexical form iff surface differs from lexical form" do
@@ -623,10 +623,10 @@ describe "Hyoki" do
           doc = Hyoki::Document.new(input)
           doc.report(type: Hyoki::Document::ReportType::Heteronyms,
             format: Hyoki::Document::ReportFormat::Markdown).should eq <<-EOS.chomp
-            * 方: カタ (1) | ホウ (1)
-              - `区切り方がわかりま`
-              - `その方がいいでし`
-            EOS
+              * 方: カタ (1) | ホウ (1)
+                - `区切り方がわかりま`
+                - `その方がいいでし`
+              EOS
         end
       end
 
@@ -639,10 +639,10 @@ describe "Hyoki" do
           doc = Hyoki::Document.new(input)
           doc.report(type: Hyoki::Document::ReportType::Heteronyms,
             format: Hyoki::Document::ReportFormat::TSV).should eq <<-EOS.chomp
-            surface\tsource\tline\tcharacter\tyomi\tsurface\texcerpt
-            方\t\t1\t4\tカタ\t方\t区切り方がわかりま
-            方\t\t2\t3\tホウ\t方\tその方がいいでし
-            EOS
+              surface\tsource\tline\tcharacter\tyomi\tsurface\texcerpt
+              方\t\t1\t4\tカタ\t方\t区切り方がわかりま
+              方\t\t2\t3\tホウ\t方\tその方がいいでし
+              EOS
         end
       end
     end

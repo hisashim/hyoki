@@ -3,7 +3,7 @@ require "colorize"
 require "option_parser"
 
 module Colorize
-  def self.enabled(&block) # Kludge: not atomic and not thread safe
+  def self.enabled(&) # Kludge: not atomic and not thread safe
     original_state = Colorize.enabled?
     Colorize.enabled = true
     result = yield
@@ -29,13 +29,9 @@ module Hyoki
 
       def initialize(feature_csv)
         values = feature_csv.split(",")
-        if (size = values.size) < 9
+        if values.size < 9
           # pad values to avoid IndexError
-          (9 - size).times do
-            values << "*"
-          end
-        else
-          values
+          (9 - values.size).times { values << "*" }
         end
         @part_of_speech = values[0]
         @part_of_speech_subcategory1 = values[1]
@@ -113,9 +109,9 @@ module Hyoki
         index_proportions = indexes.map { |i| (i.to_f / source_length) + 0.01 }
         morpheme_index_proportion = (@index.to_f / @max_index) + 0.01
         index_candidates =
-          indexes.zip(index_proportions).sort_by { |_i, i_proportion|
+          indexes.zip(index_proportions).sort_by do |_i, i_proportion|
             (i_proportion / morpheme_index_proportion - 1.0).abs
-          }
+          end
         @index_in_source_string = index_candidates.first.first # best guess
       end
     end
@@ -130,18 +126,18 @@ module Hyoki
     # e.g. `Fucoidan::Fucoidan.new.enum_parse(...)`, as you may
     # encounter errors such as `Invalid memory access (signal 11)` or
     # `free(): invalid pointer` at runtime somehow.
-    morphemes = parser.enum_parse(string).to_a.reject! { |n|
+    morphemes = parser.enum_parse(string).to_a.reject! do |n|
       n.feature.starts_with? "BOS/EOS" # remove BOS/EOS nodes
-    }
+    end
     return [] of Morpheme if morphemes.empty?
     max_index = morphemes.size - 1
-    morphemes.map_with_index { |n, i|
+    morphemes.map_with_index do |n, i|
       Morpheme.new(node: n,
         index: i,
         max_index: max_index,
         source_string: string,
         line: line)
-    }
+    end
   end
 
   def self.yomi(string, yomi_parser)
@@ -223,8 +219,6 @@ module Hyoki
         @source_name =
           if source_io.responds_to?(:path)
             source_io.path
-          else
-            nil
           end
       end
 
@@ -253,15 +247,15 @@ module Hyoki
       @parser = Fucoidan::Fucoidan.new(mecab_opts.join(" "))
       @yomi_parser = Fucoidan::Fucoidan.new((mecab_opts + ["-Oyomi"]).join(" "))
       @lines =
-        source_ios.reduce([] of Line) { |lines, source_io|
+        source_ios.reduce([] of Line) do |lines, source_io|
           current_source_lines =
-            source_io.gets_to_end.scan(LINE_REGEX).map { |md|
+            source_io.gets_to_end.scan(LINE_REGEX).map do |md|
               md[0]
-            }.map_with_index { |str, i|
+            end.map_with_index do |str, i|
               Line.new(str, i, @parser, source_io: source_io)
-            }
+            end
           lines.concat(current_source_lines)
-        }
+        end
     end
 
     def initialize(string : String, mecab_dict_dir = nil)
@@ -274,7 +268,7 @@ module Hyoki
     # variants: words with same pronunciation and different spelling.
     def variants(lines, yomi_parser, sort_order, exclude_ascii_only_items) : ReportItems
       morphemes_by_lexical_form_yomi =
-        lines.flat_map(&.morphemes).group_by { |m|
+        lines.flat_map(&.morphemes).group_by do |m|
           # Group morphemes by yomi of lexical form.
           #   * When surface and lexical form are the same, yomi of surface
           #     can be used as yomi of lexical form.
@@ -292,10 +286,10 @@ module Hyoki
           else
             Hyoki.yomi(lexical_form, yomi_parser)
           end
-        }
+        end
       lexical_form_yomi_to_variants =
-        morphemes_by_lexical_form_yomi.select { |_lfyomi, morphemes_of_same_lfyomi|
-          morphemes_of_same_lfyomi.map { |m|
+        morphemes_by_lexical_form_yomi.select do |_lfyomi, morphemes_of_same_lfyomi|
+          morphemes_of_same_lfyomi.map do |m|
             surface = m.surface
             if ASCII_WORD_REGEX.match surface
               # Kludge: For ASCII-only words, use surface as a substitute of
@@ -304,21 +298,21 @@ module Hyoki
             else
               m.feature.lexical_form
             end
-          }.uniq!.size >= 2
-        }
+          end.uniq!.size >= 2
+        end
 
       # exclude ASCII-only items if specified such.
       if exclude_ascii_only_items == true
-        lexical_form_yomi_to_variants.reject! { |key, _morphemes|
+        lexical_form_yomi_to_variants.reject! do |key, _morphemes|
           ASCII_WORD_REGEX.match(key)
-        }
+        end
       end
 
       case sort_order
       in SortOrder::Alphabetical
-        lexical_form_yomi_to_variants.to_a.sort_by { |lfyomi, _morphemes_of_same_lfyomi|
+        lexical_form_yomi_to_variants.to_a.sort_by do |lfyomi, _morphemes_of_same_lfyomi|
           lfyomi
-        }
+        end
       in SortOrder::Appearance
         lexical_form_yomi_to_variants.to_a
       end
@@ -328,27 +322,27 @@ module Hyoki
     # with same spelling and different pronunciation.
     def heteronyms(lines, sort_order, exclude_ascii_only_items) : ReportItems
       morphemes_by_surface =
-        lines.flat_map(&.morphemes).group_by { |m|
+        lines.flat_map(&.morphemes).group_by do |m|
           # group morphemes by surface expression
           m.surface
-        }
+        end
       surface_to_heteronyms =
-        morphemes_by_surface.select { |_surface, morphemes_of_same_surface|
+        morphemes_by_surface.select do |_surface, morphemes_of_same_surface|
           morphemes_of_same_surface.map(&.feature.yomi).uniq!.size >= 2
-        }
+        end
 
       # exclude ASCII-only items if specified such.
       if exclude_ascii_only_items == true
-        surface_to_heteronyms.reject! { |key, _morphemes|
+        surface_to_heteronyms.reject! do |key, _morphemes|
           ASCII_WORD_REGEX.match(key)
-        }
+        end
       end
 
       case sort_order
       in SortOrder::Alphabetical
-        surface_to_heteronyms.to_a.sort_by { |surface, _morphemes_of_same_surface|
+        surface_to_heteronyms.to_a.sort_by do |surface, _morphemes_of_same_surface|
           surface
-        }
+        end
       in SortOrder::Appearance
         surface_to_heteronyms.to_a
       end
@@ -386,13 +380,13 @@ module Hyoki
 
     def items_to_text(items, excerpt_context_length, highlighter, &)
       report_items =
-        items.map { |category, relevant_morphemes|
+        items.map do |category, relevant_morphemes|
           subcategories = relevant_morphemes.map { |m| yield m }
           item_heading =
             "* #{category}: " +
               subcategories.tally.map { |h, count| "#{h} (#{count})" }.join(" | ")
           subitems =
-            relevant_morphemes.map { |m|
+            relevant_morphemes.map do |m|
               source_name = m.line.source_name
               line_number = m.line.index + 1
               character_number = m.index_in_source_string + 1
@@ -403,9 +397,9 @@ module Hyoki
                  "L#{line_number}, C#{character_number}",
                  subcategory,
                  excerpt].compact.join("\t")
-            }
+            end
           [item_heading, subitems.join("\n")].join("\n")
-        }
+        end
       report_items.join("\n")
     end
 
@@ -423,27 +417,27 @@ module Hyoki
 
     def items_to_markdown(items, excerpt_context_length, highlighter, &)
       report_items =
-        items.map { |category, relevant_morphemes|
+        items.map do |category, relevant_morphemes|
           subcategories = relevant_morphemes.map { |m| yield m }
           item_heading =
             "* #{category}: " +
               subcategories.tally.map { |h, count| "#{h} (#{count})" }.join(" | ")
           subitems =
-            relevant_morphemes.map { |m|
+            relevant_morphemes.map do |m|
               source_name = m.line.source_name
               excerpt = excerpt(m, excerpt_context_length, highlighter)
               excerpt_md = "#{markup_as_markdown_inline_code(excerpt)}"
               "  - " + [source_name, excerpt_md].compact.join(": ")
-            }
+            end
           [item_heading, subitems.join("\n")].join("\n")
-        }
+        end
       report_items.join("\n")
     end
 
     def items_to_tsv(items, excerpt_context_length, highlighter, header, &)
       report_lines =
-        items.map { |category, relevant_morphemes|
-          relevant_morphemes.map { |m|
+        items.map do |category, relevant_morphemes|
+          relevant_morphemes.map do |m|
             source_name = m.line.source_name
             line_number = m.line.index + 1
             character_number = m.index_in_source_string + 1
@@ -451,8 +445,8 @@ module Hyoki
             excerpt = excerpt(m, excerpt_context_length, highlighter)
             [category, source_name, line_number, character_number, subcategory, m.surface, excerpt]
               .map(&.to_s.gsub(TSV_ESCAPE_REGEX, TSV_ESCAPE)).join("\t")
-          }
-        }
+          end
+        end
       [header, report_lines.flatten.join("\n")].join("\n")
     end
 
@@ -460,7 +454,7 @@ module Hyoki
       items = variants(@lines, @yomi_parser, sort_order, exclude_ascii_only_items)
       case format
       in ReportFormat::Text
-        items_to_text(items, excerpt_context_length, highlighter) { |morpheme|
+        items_to_text(items, excerpt_context_length, highlighter) do |morpheme|
           surface = morpheme.surface
           if ASCII_WORD_REGEX.match surface
             # Kludge: For ASCII-only words, categorize subitems by surface as a
@@ -471,25 +465,25 @@ module Hyoki
             # In general, categorize subitems by dictionary form.
             morpheme.feature.lexical_form
           end
-        }
+        end
       in ReportFormat::Markdown
-        items_to_markdown(items, excerpt_context_length, highlighter) { |morpheme|
+        items_to_markdown(items, excerpt_context_length, highlighter) do |morpheme|
           surface = morpheme.surface
           if ASCII_WORD_REGEX.match surface
             surface
           else
             morpheme.feature.lexical_form
           end
-        }
+        end
       in ReportFormat::TSV
-        items_to_tsv(items, excerpt_context_length, highlighter, header: header) { |morpheme|
+        items_to_tsv(items, excerpt_context_length, highlighter, header: header) do |morpheme|
           surface = morpheme.surface
           if ASCII_WORD_REGEX.match surface
             surface
           else
             morpheme.feature.lexical_form
           end
-        }
+        end
       end
     end
 
@@ -497,17 +491,17 @@ module Hyoki
       items = heteronyms(@lines, sort_order, exclude_ascii_only_items)
       case format
       in ReportFormat::Text
-        items_to_text(items, excerpt_context_length, highlighter) { |morpheme|
+        items_to_text(items, excerpt_context_length, highlighter) do |morpheme|
           morpheme.feature.yomi # categorize subitems by yomi
-        }
+        end
       in ReportFormat::Markdown
-        items_to_markdown(items, excerpt_context_length, highlighter) { |morpheme|
+        items_to_markdown(items, excerpt_context_length, highlighter) do |morpheme|
           morpheme.feature.yomi # categorize subitems by yomi
-        }
+        end
       in ReportFormat::TSV
-        items_to_tsv(items, excerpt_context_length, highlighter, header: header) { |morpheme|
+        items_to_tsv(items, excerpt_context_length, highlighter, header: header) do |morpheme|
           morpheme.feature.yomi # categorize subitems by yomi
-        }
+        end
       end
     end
 
@@ -591,7 +585,7 @@ module Hyoki
     def self.run
       c = DEFAULT_CONFIG.dup
 
-      op = OptionParser.new do |o|
+      parser = OptionParser.new do |o|
         o.summary_width = 24
         o.banner = <<-EOS
           Hyoki helps finding variants in Japanese text
@@ -601,7 +595,7 @@ module Hyoki
 
           Options:
           EOS
-        o.on("--report-type=TYPE", <<-EOS.chomp) { |s|
+        o.on("--report-type=TYPE", <<-EOS.chomp) do |s|
           Choose report type
           (#{Document::ReportType.names.map(&.downcase).join("|")}) \
           (default: #{c.report_type.to_s.downcase})
@@ -612,8 +606,8 @@ module Hyoki
             when "heteronyms" then Document::ReportType::Heteronyms
             else                   raise "Invalid report type: #{s.inspect}"
             end
-        }
-        o.on("--report-format=FORMAT", <<-EOS.chomp) { |s|
+        end
+        o.on("--report-format=FORMAT", <<-EOS.chomp) do |s|
           Choose report format
           (#{Document::ReportFormat.names.map(&.downcase).join("|")}) \
           (default: #{c.report_format.to_s.downcase})
@@ -625,8 +619,8 @@ module Hyoki
             when "tsv"      then Document::ReportFormat::TSV
             else                 raise "Invalid report format: #{s.inspect}"
             end
-        }
-        o.on("--highlight=WHEN", <<-EOS.chomp) { |s|
+        end
+        o.on("--highlight=WHEN", <<-EOS.chomp) do |s|
           Enable/disable excerpt highlighting
           (#{Highlight.names.map(&.downcase).join("|")}) \
           (default: #{c.highlight.to_s.downcase})
@@ -638,8 +632,8 @@ module Hyoki
             when "never"  then Highlight::Never
             else               raise "Invalid value for highlight: #{s.inspect}"
             end
-        }
-        o.on("--excerpt-context-length=N|N,M", <<-EOS.chomp) { |s|
+        end
+        o.on("--excerpt-context-length=N|N,M", <<-EOS.chomp) do |s|
           Set excerpt context length to N characters
           (or preceding N and succeeding M) \
           (default: #{c.excerpt_context_length})
@@ -654,8 +648,8 @@ module Hyoki
             rescue ex : ArgumentError
               raise "Invalid value for excerpt context length: #{ex.message}"
             end
-        }
-        o.on("--sort-order=HOW", <<-EOS.chomp) { |s|
+        end
+        o.on("--sort-order=HOW", <<-EOS.chomp) do |s|
           Specify how report items should be sorted
           (#{Document::SortOrder.names.map(&.downcase).join("|")}) \
           (default: #{c.sort_order.to_s.downcase})
@@ -666,8 +660,8 @@ module Hyoki
             when "appearance"   then Document::SortOrder::Appearance
             else                     raise "Invalid value for sort_order: #{s.inspect}"
             end
-        }
-        o.on("--exclude-ascii-only-items=BOOL", <<-EOS.chomp) { |s|
+        end
+        o.on("--exclude-ascii-only-items=BOOL", <<-EOS.chomp) do |s|
           Exclude ASCII-only items in the output
           (true|false) (default: #{c.exclude_ascii_only_items})
           EOS
@@ -677,14 +671,14 @@ module Hyoki
             when "false" then false
             else              raise "Invalid value for exclude_ascii_only_items: #{s.inspect}"
             end
-        }
-        o.on("--pager=PAGER", <<-EOS.chomp) { |s|
+        end
+        o.on("--pager=PAGER", <<-EOS.chomp) do |s|
           Specify pager
           (default: #{c.pager.to_s.inspect}; falls back to $HYOKI_PAGER or $PAGER)
           EOS
           c.pager = s if s && !s.empty?
-        }
-        o.on("--mecab-dict-dir=DIR", <<-EOS.chomp) { |s|
+        end
+        o.on("--mecab-dict-dir=DIR", <<-EOS.chomp) do |s|
           Specify MeCab dictionary directory
           (e.g. /var/lib/mecab/dic/ipadic-utf8)
           EOS
@@ -694,14 +688,14 @@ module Hyoki
             when !(File::Info.readable? s) then raise "Directory not readable: #{s.inspect}"
             else                                s
             end
-        }
+        end
         o.on("--help", "Show help message") { c.show_help = true }
         o.on("--version", "Show version") { c.show_version = true }
       end
-      op.parse
+      parser.parse
 
       if c.show_help
-        puts op
+        puts parser
         exit 0
       end
 
