@@ -2,18 +2,15 @@ require "fucoidan"
 require "colorize"
 require "option_parser"
 
-module Colorize
-  def self.enabled(&) # Kludge: not atomic and not thread safe
-    original_state = Colorize.enabled?
-    Colorize.enabled = true
-    result = yield
-    Colorize.enabled = original_state
-    result
-  end
-end
-
 module Hyoki
   VERSION = "0.5.1"
+
+  MUTEX =
+    {% if @top_level.has_constant?("Sync::Mutex") %} # Crystal 1.20+
+      Sync::Mutex
+    {% else %} # Crystal ~1.19
+      Mutex
+    {% end %}
 
   struct Morpheme
     struct Feature
@@ -181,8 +178,12 @@ module Hyoki
 
     struct Highlighter
       def apply(str : String)
-        Colorize.enabled do
-          str.colorize.bold.underline.reverse
+        MUTEX.new.synchronize do
+          original_state = Colorize.enabled?
+          Colorize.enabled = true
+          result = str.colorize.bold.underline.reverse
+          Colorize.enabled = original_state
+          result
         end
       end
     end
