@@ -5,13 +5,6 @@ require "option_parser"
 module Hyoki
   VERSION = "0.5.1"
 
-  MUTEX =
-    {% if @top_level.has_constant?("Sync::Mutex") %} # Crystal 1.20+
-      Sync::Mutex
-    {% else %} # Crystal ~1.19
-      Mutex
-    {% end %}
-
   struct Morpheme
     struct Feature
       @part_of_speech : String
@@ -178,13 +171,7 @@ module Hyoki
 
     struct Highlighter
       def apply(str : String)
-        MUTEX.new.synchronize do
-          original_state = Colorize.enabled?
-          Colorize.enabled = true
-          result = str.colorize.bold.underline.reverse
-          Colorize.enabled = original_state
-          result
-        end
+        str.colorize.toggle(true).bold.underline.reverse
       end
     end
 
