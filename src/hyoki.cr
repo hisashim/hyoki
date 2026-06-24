@@ -549,7 +549,7 @@ module Hyoki
         highlight: Highlight::Auto,
         excerpt_context_length: 5,
         sort_order: Document::SortOrder::Alphabetical,
-        exclude_ascii_only_items: false,
+        exclude_ascii_only_items: true,
         pager: nil,
         mecab_dict_dir: nil,
         show_help: false,

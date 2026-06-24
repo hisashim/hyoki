@@ -40,7 +40,7 @@ Options:
                              (alphabetical|appearance) (default: alphabetical)
     --exclude-ascii-only-items=BOOL
                              Exclude ASCII-only items in the output
-                             (true|false) (default: false)
+                             (true|false) (default: true)
     --pager=PAGER            Specify pager
                              (default: ""; falls back to $HYOKI_PAGER or $PAGER)
     --mecab-dict-dir=DIR     Specify MeCab dictionary directory
