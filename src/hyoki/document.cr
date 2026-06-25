@@ -45,6 +45,10 @@ module Hyoki
     @parser : Fucoidan::Fucoidan
     @yomi_parser : Fucoidan::Fucoidan
 
+    def self.yomi(string, yomi_parser)
+      yomi_parser.parse(string).chomp
+    end
+
     def initialize(source_ios : Array(IO), mecab_dict_dir = nil)
       mecab_opts = [] of String
       mecab_opts << "--dicdir=#{mecab_dict_dir}" if mecab_dict_dir
@@ -88,7 +92,7 @@ module Hyoki
           when ASCII_WORD_REGEX.match surface
             surface.downcase
           else
-            Hyoki.yomi(lexical_form, yomi_parser)
+            Document.yomi(lexical_form, yomi_parser)
           end
         end
       lexical_form_yomi_to_variants =

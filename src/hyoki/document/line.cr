@@ -1,3 +1,5 @@
+require "../morpheme"
+
 module Hyoki
   struct Document
     struct Line
@@ -12,6 +14,10 @@ module Hyoki
       @surface_indexes : Hash(String, Array(Int32))
       @parser : Fucoidan::Fucoidan
       @source_name : String?
+
+      def self.string_indexes(string, substring)
+        string.scan(Regex.new(Regex.escape(substring))).map(&.begin)
+      end
 
       def initialize(source_string, index, parser, source_io = nil)
         mds = source_string.scan(LINE_REGEX)
@@ -41,14 +47,14 @@ module Hyoki
       getter :body, :eol, :index, :source_name
 
       def morphemes
-        @morphemes ||= Hyoki.string_to_morphemes(body, self, @parser)
+        @morphemes ||= Morpheme.string_to_morphemes(body, self, @parser)
       end
 
       def surface_indexes(surface)
         if indexes = @surface_indexes[surface]?
           indexes
         else
-          @surface_indexes[surface] = Hyoki.string_indexes(@source_string, surface)
+          @surface_indexes[surface] = Line.string_indexes(@source_string, surface)
         end
       end
     end

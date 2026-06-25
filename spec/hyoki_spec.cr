@@ -6,37 +6,19 @@ describe "Hyoki" do
     SemanticVersion.parse(Hyoki::VERSION).is_a? SemanticVersion
   end
 
-  describe ".string_indexes" do
-    it "returns the indexes (start position) of all occurences of the substring" do
-      input = <<-EOS
-        する・しない・する・しない・する・しない
-        EOS
-      Hyoki.string_indexes(input, "する").should eq [0, 7, 14]
-    end
-  end
-
-  describe ".string_to_morphemes" do
-    it "converts string to morphemes" do
-      input = <<-EOS
-        わかりません。
-        EOS
-      parser = Fucoidan::Fucoidan.new
-      line = Hyoki::Document::Line.new(input, 0, parser)
-      morphemes = Hyoki.string_to_morphemes(input, line, parser)
-      morphemes.map(&.surface).should eq ["わかり", "ませ", "ん", "。"]
-    end
-  end
-
-  describe ".yomi" do
-    it "returns yomi of the string" do
-      input = <<-EOS
-        日本語
-        EOS
-      Hyoki.yomi(input, Fucoidan::Fucoidan.new("-Oyomi")).should eq "ニホンゴ"
-    end
-  end
-
   describe "Morpheme" do
+    describe ".string_to_morphemes" do
+      it "converts string to morphemes" do
+        input = <<-EOS
+          わかりません。
+          EOS
+        parser = Fucoidan::Fucoidan.new
+        line = Hyoki::Document::Line.new(input, 0, parser)
+        morphemes = Hyoki::Morpheme.string_to_morphemes(input, line, parser)
+        morphemes.map(&.surface).should eq ["わかり", "ませ", "ん", "。"]
+      end
+    end
+
     describe "#surface" do
       it "returns surface" do
         input = <<-EOS
@@ -133,6 +115,26 @@ describe "Hyoki" do
   end
 
   describe "Document" do
+    describe "Line" do
+      describe ".string_indexes" do
+        it "returns the indexes (start position) of all occurences of the substring" do
+          input = <<-EOS
+            する・しない・する・しない・する・しない
+            EOS
+          Hyoki::Document::Line.string_indexes(input, "する").should eq [0, 7, 14]
+        end
+      end
+    end
+
+    describe ".yomi" do
+      it "returns yomi of the string" do
+        input = <<-EOS
+          日本語
+          EOS
+        Hyoki::Document.yomi(input, Fucoidan::Fucoidan.new("-Oyomi")).should eq "ニホンゴ"
+      end
+    end
+
     describe ".new" do
       it "receives Array(IO) as its sources" do
         input = [IO::Memory.new("S1\n"), IO::Memory.new("S2")]
