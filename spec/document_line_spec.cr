@@ -13,14 +13,14 @@ describe "Hyoki" do
         end
       end
 
-      describe ".string_to_morphemes" do
-        it "converts string to morphemes" do
+      describe "#morphemes" do
+        it "returns morphemes" do
           input = <<-EOS
             わかりません。
             EOS
           parser = Fucoidan::Fucoidan.new
           line = Hyoki::Document::Line.new(input, 0, parser)
-          Hyoki::Document::Line.string_to_morphemes(input, line, parser).map(&.surface)
+          line.morphemes.map(&.surface)
             .should eq ["わかり", "ませ", "ん", "。"]
         end
       end
