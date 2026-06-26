@@ -19,6 +19,25 @@ module Hyoki
         string.scan(Regex.new(Regex.escape(substring))).map(&.begin)
       end
 
+      def self.string_to_morphemes(string, line, parser)
+        # Note: Avoid method chaining to Fucoidan constructor,
+        # e.g. `Fucoidan::Fucoidan.new.enum_parse(...)`, as you may
+        # encounter errors such as `Invalid memory access (signal 11)` or
+        # `free(): invalid pointer` at runtime somehow.
+        morphemes = parser.enum_parse(string).to_a.reject! do |n|
+          n.feature.starts_with? "BOS/EOS" # remove BOS/EOS nodes
+        end
+        return [] of Morpheme if morphemes.empty?
+        max_index = morphemes.size - 1
+        morphemes.map_with_index do |n, i|
+          Morpheme.new(node: n,
+            index: i,
+            max_index: max_index,
+            source_string: string,
+            line: line)
+        end
+      end
+
       def initialize(source_string, index, parser, source_io = nil)
         mds = source_string.scan(LINE_REGEX)
         raise <<-EOS if mds.size != 1
@@ -47,7 +66,7 @@ module Hyoki
       getter :body, :eol, :index, :source_name
 
       def morphemes
-        @morphemes ||= Morpheme.string_to_morphemes(body, self, @parser)
+        @morphemes ||= Line.string_to_morphemes(body, self, @parser)
       end
 
       def surface_indexes(surface)

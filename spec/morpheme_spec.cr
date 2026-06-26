@@ -12,16 +12,6 @@ end
 
 describe "Hyoki" do
   describe "Morpheme" do
-    describe ".string_to_morphemes" do
-      it "converts string to morphemes" do
-        input = <<-EOS
-          わかりません。
-          EOS
-        lines(input).first.morphemes.map(&.surface)
-          .should eq ["わかり", "ませ", "ん", "。"]
-      end
-    end
-
     describe "#surface" do
       it "returns surface" do
         input = <<-EOS
