@@ -9,14 +9,18 @@
 
 GBP_EXTRA_OPTS =
 
-debianpackage:
+debianpackage: debianversioncheck
 	gbp buildpackage -us -uc \
 	--git-upstream-tree=`git branch --show-current` \
 	--git-ignore-branch \
 	$(GBP_EXTRA_OPTS)
 
+debianversioncheck: src/main.cr debian/changelog
+	@echo "Comparing version strings in: $^"
+	[ "$(shell crystal src/main.cr --version)" = "$(shell dpkg-parsechangelog --show-field=Version | cut --delimiter '-' --fields=1)" ]
+
 debianpackageclean:
 	dh_clean
 	rm -f ../hyoki*
 
-.PHONY: debianpackage debianpackageclean
+.PHONY: debianpackage debianversioncheck debianpackageclean

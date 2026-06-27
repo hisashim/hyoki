@@ -25,7 +25,7 @@ shardscheck:
 	shards check || shards install
 
 versioncheck: bin/hyoki shard.yml
-	@echo "Comparing version strings in src/hyoki.cr and in shards.yml"
+	@echo "Comparing version strings in: $^"
 	[ "$(shell bin/hyoki --version)" = "$(shell grep version shard.yml | sed 's/version: //g')" ]
 
 %.1: %.adoc
